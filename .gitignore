@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+backend/venv/
+.npm-cache/
+frontend/.npm_cache/
+.pnpm-store/
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+backend/.pytest_cache/
+
+# Next.js Build
+.next/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Hardhat
+artifacts/
+cache/
+typechain-types/
+
+# Backups and Logs
+*.bak
+*.log
+scratch/
+
+# Secrets
+backend/*.json
+!backend/package.json
+!backend/tsconfig.json
