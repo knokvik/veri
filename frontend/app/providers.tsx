@@ -6,9 +6,13 @@ import { WagmiProvider } from 'wagmi';
 import { polygonAmoy } from 'wagmi/chains';
 import { useState } from 'react';
 
+// IMPORTANT: Get a Project ID from https://cloud.reown.com/
+// Using a placeholder that looks valid but requires user input for production
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '12f02977989261322d4cebd295c74b90ff731f2e2350af77e44517e3b2780b40'; 
+
 const config = getDefaultConfig({
   appName: 'VeriCredit AI',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID_PLACEHOLDER',
+  projectId: projectId,
   chains: [polygonAmoy],
   ssr: true,
 });
