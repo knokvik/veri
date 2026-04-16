@@ -5,10 +5,11 @@ import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rai
 import { WagmiProvider } from 'wagmi';
 import { polygonAmoy } from 'wagmi/chains';
 import { useState } from 'react';
+import { AuthProvider } from '../contexts/AuthContext';
+import { ProjectStoreProvider } from '../lib/projectStore';
 
 // IMPORTANT: Get a Project ID from https://cloud.reown.com/
-// Using a placeholder that looks valid but requires user input for production
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '12f02977989261322d4cebd295c74b90ff731f2e2350af77e44517e3b2780b40'; 
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '12f02977989261322d4cebd295c74b90ff731f2e2350af77e44517e3b2780b40';
 
 const config = getDefaultConfig({
   appName: 'VeriCredit AI',
@@ -27,7 +28,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
             accentColor: '#2e7d32',
             accentColorForeground: 'white',
           })}>
-          {children}
+          <AuthProvider>
+            <ProjectStoreProvider>
+              {children}
+            </ProjectStoreProvider>
+          </AuthProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
