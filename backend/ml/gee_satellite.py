@@ -19,14 +19,26 @@ def analyze_satellite(lat: float, lng: float) -> dict:
     try:
         # Requires authentication. Ensure GOOGLE_APPLICATION_CREDENTIALS or similar is set if using service account
         credentials_path = os.getenv("GEE_PRIVATE_KEY_JSON_PATH")
-        if credentials_path and os.path.exists(credentials_path):
-            # Assumes service account
-            credentials = ee.ServiceAccountCredentials(os.getenv("GEE_SERVICE_ACCOUNT_EMAIL"), credentials_path)
-            ee.Initialize(credentials)
+        service_account = os.getenv("GEE_SERVICE_ACCOUNT_EMAIL")
+        
+        if credentials_path and credentials_path.startswith("./"):
+            # Resolve relative to project root (one level up from ml/)
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # backend/
+            project_root = os.path.dirname(base_dir)
+            credentials_path = os.path.join(project_root, credentials_path[2:])
+
+        if credentials_path and os.path.exists(credentials_path) and service_account:
+            try:
+                from google.oauth2 import service_account as sa
+                credentials = sa.Credentials.from_service_account_file(
+                    credentials_path, 
+                    scopes=['https://www.googleapis.com/auth/earthengine']
+                )
+                ee.Initialize(credentials)
+            except Exception as auth_err:
+                return {"error": f"GEE Auth Error: {str(auth_err)}", "status": "Failed"}
         else:
-            # Fallback to default auth (will fail if not authenticated locally via `earthengine authenticate`)
-            # For strict backend services, the user must provide the keys in true deployments.
-            # We catch exceptions to prevent server crash.
+            # Fallback
             pass
 
         # Define Point of Interest

@@ -4,22 +4,52 @@ import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { useProjectStore } from '../../lib/projectStore';
 import Link from 'next/link';
 import CCTSBadge from '../../components/CCTSBadge';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table"
+import { 
+  ShieldCheck, 
+  Activity, 
+  Clock, 
+  CheckCircle2, 
+  Flame, 
+  History, 
+  ArrowRight,
+  Eye,
+  FileText,
+  BarChart3,
+  Search
+} from "lucide-react"
 
 export default function AdminPanel() {
   const { isAuthorized, loading, accessDenied } = useProtectedRoute({ requiredRole: 'admin' });
   const { projects, ownedTokens } = useProjectStore();
 
-  if (loading) return <div className="text-center mt-20 text-slate-400 animate-pulse">Verifying admin access...</div>;
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Verifying authority credentials...</div>;
   if (accessDenied) {
     return (
-      <div className="max-w-md mx-auto mt-20 panel text-center space-y-4">
-        <div className="text-4xl">🛡️</div>
-        <h2 className="text-2xl font-bold text-red-400">Access Denied</h2>
-        <p className="text-sm text-slate-400">{accessDenied}</p>
-        <Link href="/login" className="btn-primary inline-block px-6 py-2 text-sm">
-          Login as Admin
-        </Link>
-      </div>
+      <Card className="max-w-md mx-auto mt-20 border-destructive shadow-lg">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+             <ShieldCheck className="w-12 h-12 text-destructive opacity-20" />
+          </div>
+          <CardTitle className="text-destructive text-2xl font-black">Access Denied</CardTitle>
+          <CardDescription>{accessDenied}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center pb-8">
+           <Button asChild variant="outline">
+              <Link href="/login">Login as administrator</Link>
+           </Button>
+        </CardContent>
+      </Card>
     );
   }
   if (!isAuthorized) return null;
@@ -31,118 +61,166 @@ export default function AdminPanel() {
   const retiredCount = projects.filter(p => p.status === 'retired').length;
   const totalTokens = ownedTokens.reduce((sum, t) => sum + t.amount, 0);
 
+  const stats = [
+    { label: 'Total Projects', value: totalProjects, icon: FileText, color: 'text-primary' },
+    { label: 'Pending Review', value: pendingCount, icon: Clock, color: 'text-amber-500' },
+    { label: 'Verified Assets', value: verifiedCount, icon: ShieldCheck, color: 'text-blue-500' },
+    { label: 'Minted Credits', value: mintedCount, icon: CheckCircle2, color: 'text-green-500' },
+    { label: 'Retired (Burnt)', value: retiredCount, icon: Flame, color: 'text-muted-foreground' },
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8 mt-6 animate-fadeIn">
-      <div className="border-b border-red-900/50 pb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-2xl">🛡️</span>
-          <h2 className="text-3xl font-bold text-slate-100">Admin Panel</h2>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-red-900/40 text-red-300 border-red-600">
-            ADMIN ONLY
-          </span>
+    <div className="max-w-7xl mx-auto space-y-8 mt-6 animate-fadeIn pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
+        <div>
+          <div className="flex items-center gap-3">
+            <h2 className="text-4xl font-black tracking-tight">Global Administrator</h2>
+            <Badge variant="destructive" className="font-black h-5 px-2 text-[10px] tracking-widest uppercase">Admin Mode</Badge>
+          </div>
+          <p className="text-muted-foreground mt-2 text-sm font-medium">System-wide monitoring of all CCTS submissions and token lifecycles.</p>
         </div>
-        <p className="text-slate-400">View and manage all submitted projects across all users.</p>
       </div>
 
-      {/* Stats */}
+      {/* Stats Dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {[
-          { label: 'Total Projects', value: totalProjects, color: 'text-white' },
-          { label: 'Pending', value: pendingCount, color: 'text-amber-400' },
-          { label: 'Verified', value: verifiedCount, color: 'text-blue-400' },
-          { label: 'Minted', value: mintedCount, color: 'text-climateGreen' },
-          { label: 'Retired', value: retiredCount, color: 'text-slate-400' },
-        ].map(stat => (
-          <div key={stat.label} className="panel text-center py-4">
-            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{stat.label}</p>
-            <p className={`text-3xl font-black ${stat.color}`}>{stat.value}</p>
-          </div>
+        {stats.map(stat => (
+          <Card key={stat.label} className="border-border shadow-sm overflow-hidden relative group hover:border-primary transition-all">
+            <CardHeader className="p-4 pb-2">
+              <div className="flex justify-between items-start">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
+                <stat.icon className={`w-4 h-4 ${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`} />
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+               <p className={`text-3xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* All Projects Table */}
-      <div className="panel overflow-x-auto">
-        <h3 className="text-xl font-bold text-slate-100 mb-4">All Submitted Projects</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* All Projects Table */}
+        <Card className="lg:col-span-2 shadow-sm border-border overflow-hidden">
+          <CardHeader className="border-b border-border bg-muted">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-xl font-black tracking-tight">CCTS Submission Ledger</CardTitle>
+                <CardDescription>Comprehensive list of all platform projects.</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest gap-2">
+                <Search className="w-3.5 h-3.5" /> Filter Results
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {projects.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center px-12">
+                 <Activity className="w-12 h-12 text-muted-foreground/20 mb-4" />
+                 <p className="text-sm font-bold text-muted-foreground">No active data artifacts found</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-muted">
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground h-10">Project Identity</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground h-10">Coordinates</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground h-10">Platform Status</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground h-10 text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {projects.map(p => (
+                    <TableRow key={p.id} className="border-border hover:bg-muted transition-all">
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold tracking-tight text-sm">{p.name}</span>
+                          <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                            <Clock className="w-2.5 h-2.5" /> {p.createdAt}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-[10px] text-muted-foreground">
+                        {p.lat}, {p.lng}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={p.status === 'minted' ? 'default' : 'secondary'} className={`text-[9px] font-black h-5 px-1.5 py-0 border-none ${
+                             p.status === 'minted' ? 'bg-green-500 text-white' :
+                             p.status === 'verified' ? 'bg-blue-500 text-white' :
+                             p.status === 'pending' ? 'bg-amber-500 text-black' :
+                             'bg-muted text-muted-foreground'
+                          }`}>
+                            {p.status.toUpperCase()}
+                          </Badge>
+                          {p.tokenId && <span className="font-mono text-[9px] text-muted-foreground"># {p.tokenId}</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary hover:text-white transition-colors">
+                           <Link href={`/verification-report?id=${p.id}`}>
+                             <Eye className="w-3.5 h-3.5" />
+                           </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-        {projects.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            <p className="text-lg">No projects in the system</p>
-            <p className="text-sm mt-1">Load sample data from the dashboard to populate test data.</p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-700 text-left text-slate-400">
-                <th className="pb-3 pr-4">Project</th>
-                <th className="pb-3 pr-4">Location</th>
-                <th className="pb-3 pr-4">Scheme</th>
-                <th className="pb-3 pr-4">Status</th>
-                <th className="pb-3 pr-4">Score</th>
-                <th className="pb-3 pr-4">Token</th>
-                <th className="pb-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map(p => (
-                <tr key={p.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
-                  <td className="py-3 pr-4">
-                    <span className="font-semibold text-white">{p.name}</span>
-                    <br />
-                    <span className="text-xs text-slate-500">{p.createdAt}</span>
-                  </td>
-                  <td className="py-3 pr-4 font-mono text-xs text-slate-400">
-                    {p.lat}, {p.lng}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <CCTSBadge schemeType={p.schemeType === 'compliance' ? 'Compliance' : 'Offset'} />
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${
-                      p.status === 'minted' ? 'bg-green-900/20 border-green-600 text-green-400' :
-                      p.status === 'verified' ? 'bg-blue-900/20 border-blue-600 text-blue-400' :
-                      p.status === 'retired' ? 'bg-slate-900 border-slate-600 text-slate-400' :
-                      'bg-amber-900/20 border-amber-600 text-amber-400'
-                    }`}>
-                      {p.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 font-mono text-blue-400">
-                    {p.llmResult?.additionality_score || '—'}
-                  </td>
-                  <td className="py-3 pr-4 font-mono text-tealAccent text-xs">
-                    {p.tokenId ? `#${p.tokenId}` : '—'}
-                  </td>
-                  <td className="py-3">
-                    <Link
-                      href={`/verification-report?id=${p.id}`}
-                      className="text-xs text-tealAccent hover:underline"
-                    >
-                      View Report
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+        {/* System Summary */}
+        <div className="space-y-6">
+           <Card className="shadow-sm border-border bg-card">
+              <CardHeader className="pb-4">
+                 <CardTitle className="text-lg font-black tracking-tight flex items-center gap-2">
+                   <BarChart3 className="w-4 h-4 text-primary" /> Token Lifecycle
+                 </CardTitle>
+                 <CardDescription className="text-xs">Aggregate data across Polygon.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="p-4 rounded-xl bg-background border border-border">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">CCTS Supply</p>
+                    <p className="text-3xl font-black text-green-500 tracking-tighter">{totalTokens} <span className="text-xs font-medium text-muted-foreground">Tokens</span></p>
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 rounded-xl bg-background border border-border/50">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Active</p>
+                       <p className="text-xl font-black text-blue-500 tracking-tighter">{ownedTokens.filter(t => !t.retired).length}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-background border border-border/50">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Retired</p>
+                       <p className="text-xl font-black text-muted-foreground tracking-tighter">{ownedTokens.filter(t => t.retired).length}</p>
+                    </div>
+                 </div>
+              </CardContent>
+              <CardFooter className="pt-2">
+                 <Button asChild className="w-full h-10 font-bold gap-2">
+                    <Link href="/dashboard">View Public Dashboard <ArrowRight className="w-3.5 h-3.5" /></Link>
+                 </Button>
+              </CardFooter>
+           </Card>
 
-      {/* Token Summary */}
-      <div className="panel">
-        <h3 className="text-xl font-bold text-slate-100 mb-4">Token Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 text-center">
-            <p className="text-xs text-slate-400 mb-1">Total Minted Credits</p>
-            <p className="text-2xl font-black text-climateGreen">{totalTokens}</p>
-          </div>
-          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 text-center">
-            <p className="text-xs text-slate-400 mb-1">Active Tokens</p>
-            <p className="text-2xl font-black text-blue-400">{ownedTokens.filter(t => !t.retired).length}</p>
-          </div>
-          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 text-center">
-            <p className="text-xs text-slate-400 mb-1">Retired Tokens</p>
-            <p className="text-2xl font-black text-slate-400">{ownedTokens.filter(t => t.retired).length}</p>
-          </div>
+           <Card className="border-border shadow-sm bg-muted">
+              <CardHeader className="p-4">
+                 <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                    <History className="w-3.5 h-3.5" /> System Activity
+                 </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 space-y-3">
+                 {[
+                   { msg: 'Admin session initiated', time: 'Just now' },
+                   { msg: 'CCTS Contract Synced', time: '2m ago' },
+                   { msg: 'API Gateway Online', time: 'Active' },
+                 ].map((log, i) => (
+                   <div key={i} className="flex justify-between items-center text-[10px] font-medium py-1 border-b border-border last:border-0">
+                      <span className="text-muted-foreground">{log.msg}</span>
+                      <span className="font-mono text-primary">{log.time}</span>
+                   </div>
+                 ))}
+              </CardContent>
+           </Card>
         </div>
       </div>
     </div>

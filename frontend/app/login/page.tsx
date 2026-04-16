@@ -5,6 +5,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { AlertCircle, CheckCircle2, ShieldCheck, Wallet, Lock, Mail, ArrowRight } from "lucide-react"
 
 type TabMode = 'login' | 'signup';
 
@@ -43,143 +52,155 @@ export default function Login() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-16 space-y-6 animate-fadeIn">
-      <div className="panel space-y-6">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-100 mb-1">
-            {tab === 'login' ? 'Access VeriCredit' : 'Create Account'}
-          </h2>
-          <p className="text-sm text-slate-400">
-            {isDemoMode && (
-              <span className="inline-block bg-amber-900/30 border border-amber-600/50 text-amber-400 px-2 py-0.5 rounded text-xs mb-2">
-                Demo Mode — Supabase not configured
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Tab Toggle */}
-        <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
-          <button
-            onClick={() => { setTab('login'); clearError(); setIsAdminMode(false); }}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${tab === 'login' ? 'bg-climateGreen text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => { setTab('signup'); clearError(); setIsAdminMode(false); }}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${tab === 'signup' ? 'bg-climateGreen text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-300">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              placeholder="user@climatecorp.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-300">Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field"
-              placeholder="••••••••"
-              minLength={6}
-            />
-          </div>
-
-          {tab === 'signup' && (
-            <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Subscription Tier</label>
-              <select
-                value={signupTier}
-                onChange={(e) => setSignupTier(e.target.value as 'basic' | 'premium')}
-                className="input-field appearance-none"
-              >
-                <option value="basic">Basic — Submit projects</option>
-                <option value="premium">Premium — Full marketplace + retirement</option>
-              </select>
-              <p className="text-xs text-slate-500 mt-1">Free tier: view-only access (no submission).</p>
-            </div>
+    <div className="max-w-md mx-auto mt-16 space-y-8 animate-fadeIn pb-20 px-4">
+      <Card className="border-border shadow-xl bg-card/50 backdrop-blur-sm">
+        <CardHeader className="text-center pb-2">
+          {isDemoMode && (
+             <div className="flex justify-center mb-4">
+               <Badge variant="outline" className="text-amber-500 border-amber-500 font-bold px-3 py-1 gap-1.5 uppercase text-[10px] tracking-widest">
+                 <AlertCircle className="w-3 h-3" /> Demo Mode Active
+               </Badge>
+             </div>
           )}
+          <CardTitle className="text-3xl font-black tracking-tighter">
+            {tab === 'login' ? 'Welcome Back' : 'Join VeriCredit'}
+          </CardTitle>
+          <CardDescription>
+            {tab === 'login' ? 'Access your high-integrity carbon assets' : 'Start your transparency-first forestry journey'}
+          </CardDescription>
+        </CardHeader>
 
-          {tab === 'login' && (
-            <div className="flex justify-between items-center">
-              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isAdminMode}
-                  onChange={(e) => setIsAdminMode(e.target.checked)}
-                  className="rounded border-slate-600 bg-slate-800 text-climateGreen focus:ring-climateGreen"
+        <CardContent className="space-y-6 pt-4">
+          <Tabs value={tab} onValueChange={(v) => { setTab(v as TabMode); clearError(); setIsAdminMode(false); }} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted border border-border">
+              <TabsTrigger value="login" className="font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">Login</TabsTrigger>
+              <TabsTrigger value="signup" className="font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">Sign Up</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="pl-10 h-11 border-border focus:border-primary/50"
                 />
-                Admin Login
-              </label>
-              <Link href="/forgot-password" className="text-xs text-tealAccent hover:underline">
-                Forgot Password?
-              </Link>
+              </div>
             </div>
-          )}
 
-          {error && (
-            <div className={`text-sm p-3 rounded border ${error.includes('sent') || error.includes('created') ? 'bg-green-900/20 border-green-600 text-green-400' : 'bg-red-900/20 border-red-600 text-red-400'}`}>
-              {error}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Password</Label>
+                {tab === 'login' && (
+                  <Link href="/forgot-password" title="Forgot Password" className="text-[10px] font-bold text-primary hover:underline">
+                    Forgot?
+                  </Link>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  minLength={6}
+                  className="pl-10 h-11 border-border focus:border-primary/50"
+                />
+              </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full btn-primary py-3 disabled:opacity-50"
+            {tab === 'signup' && (
+              <div className="space-y-2">
+                <Label htmlFor="tier" className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Account Tier</Label>
+                <Select value={signupTier} onValueChange={(v) => setSignupTier(v as 'basic' | 'premium')}>
+                  <SelectTrigger className="h-11 border-border bg-background">
+                    <SelectValue placeholder="Select a tier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic" className="font-medium">Basic — Submit & Verify</SelectItem>
+                    <SelectItem value="premium" className="font-medium">Premium — Trading & MRV</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground ml-1 font-medium">Free access includes read-only portfolio viewing.</p>
+              </div>
+            )}
+
+            {tab === 'login' && (
+              <div className="flex items-center space-x-2 pt-1 ml-1">
+                <Checkbox
+                  id="admin"
+                  checked={isAdminMode}
+                  onCheckedChange={(v) => setIsAdminMode(v as boolean)}
+                  className="rounded border-border"
+                />
+                <label htmlFor="admin" className="text-xs font-medium text-muted-foreground cursor-pointer select-none">
+                  Login as Administrator
+                </label>
+              </div>
+            )}
+
+            {error && (
+              <div className={`flex items-center gap-3 p-3 rounded-lg border text-xs font-medium animate-shake ${error.includes('sent') || error.includes('created') ? 'bg-green-500 text-white border-green-600' : 'bg-destructive text-white border-destructive'}`}>
+                {error.includes('sent') || error.includes('created') ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 text-base font-black tracking-tight mt-6 shadow-lg hover:scale-[1.01] transition-all"
+            >
+              {loading ? 'Processing...' : tab === 'signup' ? 'Create Account' : isAdminMode ? 'Admin Access' : 'Sign In'}
+              {!loading && <ArrowRight className="ml-2 w-4 h-4" />}
+            </Button>
+          </form>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-border"></div>
+            <span className="flex-shrink-0 mx-4 text-muted-foreground text-[10px] font-black uppercase tracking-widest">or continue with</span>
+            <div className="flex-grow border-t border-border"></div>
+          </div>
+
+          <Button
+            onClick={handleWalletLogin}
+            variant="outline"
+            className="w-full h-12 font-bold gap-3 border-border hover:border-primary hover:bg-muted transition-all"
           >
-            {loading ? 'Processing...' : tab === 'signup' ? 'Create Account' : isAdminMode ? 'Login as Admin' : 'Login'}
-          </button>
-        </form>
+            <Wallet className="w-5 h-5 text-primary" />
+            {isConnected ? 'Connected Web3 Identity' : 'Connect Crypto Wallet'}
+          </Button>
+        </CardContent>
 
-        {/* Divider */}
-        <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-slate-700"></div>
-          <span className="flex-shrink-0 mx-4 text-slate-500 text-sm">or</span>
-          <div className="flex-grow border-t border-slate-700"></div>
-        </div>
+        <CardFooter className="bg-muted border-t border-border justify-center p-6 text-center">
+          <div className="grid grid-cols-3 gap-3 w-full">
+            {[
+              { label: 'Free', color: 'bg-muted-foreground text-background border-border' },
+              { label: 'Basic', color: 'bg-blue-600 text-white border-blue-400' },
+              { label: 'Premium', color: 'bg-amber-500 text-black border-amber-400' },
+            ].map((t) => (
+              <div key={t.label} className={`rounded-md border p-1.5 ${t.color}`}>
+                <p className="text-[9px] font-black uppercase tracking-tight">{t.label}</p>
+              </div>
+            ))}
+          </div>
+        </CardFooter>
+      </Card>
 
-        {/* Wallet Login */}
-        <button
-          onClick={handleWalletLogin}
-          className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg border border-slate-600 transition-colors flex items-center justify-center gap-2"
-        >
-          <span className="text-lg">🦊</span>
-          {isConnected ? 'Continue with Connected Wallet' : 'Connect Web3 Wallet'}
-        </button>
-      </div>
-
-      {/* Info card */}
-      <div className="panel bg-slate-800/50 text-xs text-slate-400 space-y-2">
-        <p className="font-semibold text-slate-300">Subscription Tiers:</p>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-slate-900 p-2 rounded border border-slate-700 text-center">
-            <p className="font-bold text-slate-300">Free</p>
-            <p>View only</p>
-          </div>
-          <div className="bg-slate-900 p-2 rounded border border-blue-800 text-center">
-            <p className="font-bold text-blue-300">Basic</p>
-            <p>Submit projects</p>
-          </div>
-          <div className="bg-slate-900 p-2 rounded border border-amber-800 text-center">
-            <p className="font-bold text-amber-300">Premium</p>
-            <p>Full access</p>
-          </div>
-        </div>
+      <div className="text-center">
+        <p className="text-[10px] text-muted-foreground font-medium max-w-[280px] mx-auto">
+          By continuing, you agree to VeriCredit's Terms of Service and Privacy Policy regarding CCTS data sovereignity.
+        </p>
       </div>
     </div>
   );

@@ -7,6 +7,23 @@ import { vericreditAbi } from '../../utils/abis';
 import WalletCard from '../../components/WalletCard';
 import Link from 'next/link';
 import { useState } from 'react';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Briefcase, 
+  Store, 
+  Flame, 
+  FileCheck, 
+  History, 
+  Download, 
+  ArrowUpRight, 
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  Activity,
+  Coins
+} from "lucide-react"
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_VERICREDIT_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
 
@@ -17,8 +34,17 @@ export default function Portfolio() {
   const { writeContract, isPending } = useWriteContract();
   const [retiredJust, setRetiredJust] = useState<number | null>(null);
 
-  if (loading) return <div className="text-center mt-20 text-slate-400 animate-pulse">Loading...</div>;
-  if (accessDenied) return <div className="text-center mt-20 text-red-400 panel max-w-md mx-auto">{accessDenied}</div>;
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Loading asset portfolio...</div>;
+  if (accessDenied) {
+     return (
+      <Card className="max-w-md mx-auto mt-20 border-destructive">
+        <CardHeader>
+          <CardTitle className="text-destructive">Access Denied</CardTitle>
+          <CardDescription>{accessDenied}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
   if (!isAuthorized) return null;
 
   const activeTokens = ownedTokens.filter(t => !t.retired);
@@ -76,66 +102,97 @@ BEE Reference: CCTS-${token.tokenId}-${Date.now()}
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 mt-6 animate-fadeIn">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-slate-800 pb-6">
+    <div className="max-w-7xl mx-auto space-y-8 mt-6 animate-fadeIn pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
         <div>
-          <h2 className="text-3xl font-bold text-slate-100">My Portfolio</h2>
-          <p className="text-slate-400 mt-1">Manage your acquired VeriCredit tokens and CCTS retirements.</p>
+          <h2 className="text-4xl font-black tracking-tight">Active Portfolio</h2>
+          <p className="text-muted-foreground mt-2 text-sm font-medium">Manage your acquired VeriCredit tokens and CCTS compliance retirements.</p>
         </div>
-        <Link href="/marketplace" className="btn-secondary text-sm px-6 py-2">
-          🏪 Browse Marketplace
-        </Link>
+        <Button asChild variant="outline" className="h-10 px-6 gap-2 border-border hover:border-primary/50 transition-all font-bold">
+          <Link href="/marketplace">
+            <Store className="w-4 h-4" /> Browse Marketplace
+          </Link>
+        </Button>
       </div>
 
-      {/* Wallet Summary */}
       <WalletCard />
 
       {ownedTokens.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">
-          <p className="text-4xl mb-3">💼</p>
-          <p className="text-lg">No tokens in your portfolio</p>
-          <p className="text-sm mt-2">
-            <Link href="/marketplace" className="text-tealAccent hover:underline">Buy credits from the marketplace</Link>
-            {' '}or{' '}
-            <Link href="/submit-project" className="text-tealAccent hover:underline">mint your own</Link>.
-          </p>
-        </div>
+        <Card className="bg-muted/30 border-dashed py-16">
+          <CardContent className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-none bg-muted flex items-center justify-center">
+              <Briefcase className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-xl font-bold tracking-tight">Your portfolio is empty</p>
+              <p className="text-muted-foreground text-sm max-w-sm mx-auto mt-1">
+                Acquire carbon credits from the marketplace or mint your own assets to see them here.
+              </p>
+            </div>
+            <div className="flex gap-4 pt-4">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/marketplace">Marketplace</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/submit-project">Mint Credits</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
-        <>
+        <div className="space-y-12">
           {/* Active Tokens */}
           {activeTokens.length > 0 && (
-            <div>
-              <h3 className="text-lg font-bold text-climateGreen mb-4">Active Credits ({activeTokens.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Activity className="w-5 h-5 text-primary" />
+                <h3 className="text-xl font-black tracking-tight">Active Credits</h3>
+                <Badge variant="secondary" className="rounded-none px-2 h-5 text-[10px] font-black text-white">{activeTokens.length}</Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {activeTokens.map(token => (
-                  <div key={token.tokenId} className="panel border-l-4 border-l-climateGreen hover:border-slate-500 transition-colors">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="text-lg font-bold text-white">{token.projectName}</h4>
-                      <span className="text-xs bg-slate-900 border border-slate-700 text-slate-300 px-2 py-1 rounded font-mono">
-                        TKN #{token.tokenId}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-sm text-slate-300 bg-slate-900 rounded-lg p-3 border border-slate-800 mb-4">
-                      <p className="flex justify-between"><span>Amount:</span> <span className="font-mono text-climateGreen">{token.amount} credits</span></p>
-                      <p className="flex justify-between"><span>Scheme:</span> <span className="font-mono text-blue-400">{token.schemeType}</span></p>
-                      <p className="flex justify-between"><span>Minted:</span> <span className="font-mono text-slate-400">{token.mintedAt}</span></p>
-                    </div>
-
-                    {retiredJust === token.tokenId && (
-                      <div className="bg-green-900/30 border border-green-500 text-green-400 p-3 rounded-lg mb-3 text-sm">
-                        ✅ Successfully retired!
+                  <Card key={token.tokenId} className="group hover:border-primary/50 transition-all duration-300 relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+                    
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-start mb-2">
+                         <CardTitle className="text-xl font-bold tracking-tight">{token.projectName}</CardTitle>
+                         <Badge variant="outline" className="font-mono text-[10px] bg-muted/50">TKN #{token.tokenId}</Badge>
                       </div>
-                    )}
+                      <CardDescription className="flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5" /> Scheme: {token.schemeType === 'compliance' ? 'CCTS Compliance' : 'Voluntary Offset'}
+                      </CardDescription>
+                    </CardHeader>
 
-                    <button
-                      onClick={() => handleRetire(token.tokenId)}
-                      disabled={isPending}
-                      className="w-full text-sm btn-primary py-2 bg-amber-700 hover:bg-amber-600 border-none"
-                    >
-                      {isPending ? 'Processing...' : '🔥 Burn for CCTS Compliance'}
-                    </button>
-                  </div>
+                    <CardContent>
+                      <div className="space-y-3 p-4 bg-muted/40 rounded-none border border-border/50 mb-6">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground font-medium">Available Balance</span>
+                          <span className="font-mono font-bold text-primary">{token.amount} Credits</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground font-medium">Minted Date</span>
+                          <span className="font-mono">{token.mintedAt}</span>
+                        </div>
+                      </div>
+
+                      {retiredJust === token.tokenId && (
+                        <div className="bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 p-3 rounded-none flex items-center gap-3 mb-4 animate-slideUp">
+                           <CheckCircle2 className="w-4 h-4 shrink-0" />
+                           <span className="text-xs font-bold">Successfully retired for compliance!</span>
+                        </div>
+                      )}
+
+                      <Button 
+                        onClick={() => handleRetire(token.tokenId)}
+                        disabled={isPending}
+                        variant="default"
+                        className="w-full h-11 font-black tracking-tight gap-2 bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-500/10"
+                      >
+                         <Flame className="w-4 h-4" /> {isPending ? 'Propagating Tx...' : 'Retire for Compliance'}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -143,35 +200,51 @@ BEE Reference: CCTS-${token.tokenId}-${Date.now()}
 
           {/* Retired Tokens */}
           {retiredTokens.length > 0 && (
-            <div>
-              <h3 className="text-lg font-bold text-slate-400 mb-4">Retired Credits ({retiredTokens.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <History className="w-5 h-5 text-muted-foreground" />
+                <h3 className="text-xl font-black tracking-tight text-muted-foreground">Retired Credits</h3>
+                <Badge variant="outline" className="rounded-none px-2 h-5 text-[10px] font-black text-muted-foreground">{retiredTokens.length}</Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {retiredTokens.map(token => (
-                  <div key={token.tokenId} className="panel border-l-4 border-l-slate-600 opacity-80">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="text-lg font-bold text-slate-300">{token.projectName}</h4>
-                      <span className="text-xs bg-slate-900 border border-slate-700 text-slate-500 px-2 py-1 rounded font-mono">
-                        TKN #{token.tokenId}
-                      </span>
-                    </div>
+                  <Card key={token.tokenId} className="opacity-60 grayscale-[0.5] border-muted hover:opacity-100 hover:grayscale-0 transition-all duration-300 overflow-hidden shadow-sm">
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-start mb-2">
+                         <CardTitle className="text-xl font-bold tracking-tight">{token.projectName}</CardTitle>
+                         <Badge variant="outline" className="font-mono text-[10px]">TKN #{token.tokenId}</Badge>
+                      </div>
+                      <CardDescription className="flex items-center gap-2">
+                        <ShieldCheck className="w-3.5 h-3.5 text-green-500" /> Permanently Retired
+                      </CardDescription>
+                    </CardHeader>
 
-                    <div className="space-y-2 text-sm text-slate-400 bg-slate-900 rounded-lg p-3 border border-slate-800 mb-4">
-                      <p className="flex justify-between"><span>Status:</span> <span className="font-bold text-slate-500">BURNED</span></p>
-                      <p className="flex justify-between"><span>Retired:</span> <span className="font-mono">{token.retiredAt}</span></p>
-                    </div>
+                    <CardContent>
+                      <div className="space-y-3 p-4 bg-muted/60 rounded-none border border-border/50 mb-6">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground font-medium">Retirement Date</span>
+                          <span className="font-mono font-bold">{token.retiredAt}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground font-medium">BEE Reference</span>
+                          <span className="font-mono text-[10px]">CCTS-RET-{token.tokenId}</span>
+                        </div>
+                      </div>
 
-                    <button
-                      onClick={() => handleDownloadCert(token)}
-                      className="w-full text-sm btn-secondary py-2"
-                    >
-                      📄 Download Compliance Certificate
-                    </button>
-                  </div>
+                      <Button 
+                        onClick={() => handleDownloadCert(token)}
+                        variant="ghost"
+                        className="w-full h-11 font-bold gap-2 text-primary hover:bg-primary/5 transition-all"
+                      >
+                         <Download className="w-4 h-4" /> Download Compliance Cert
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

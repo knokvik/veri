@@ -1,75 +1,93 @@
 import Link from 'next/link';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ArrowRight, Camera, Satellite, Database, CheckCircle2, ShieldCheck, Zap } from "lucide-react"
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center text-center mt-12 md:mt-20 max-w-5xl mx-auto space-y-10 animate-fadeIn">
+    <div className="flex flex-col items-center text-center mt-12 md:mt-24 max-w-5xl mx-auto space-y-12 animate-fadeIn">
 
-      <div className="inline-block py-1.5 px-4 rounded-full border border-climateGreen bg-climateGreen/10 text-climateGreen text-sm font-semibold mb-2 shadow-sm animate-slideUp">
+      <Badge variant="outline" className="px-5 py-2 rounded-full border-primary/30 bg-primary/5 text-primary text-sm font-medium animate-slideUp shadow-sm">
         🇮🇳 India CCTS 2026 Compatible
-      </div>
+      </Badge>
 
-      <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-        Transparent Forestry Carbon Credits. <br/>
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-climateGreen to-tealAccent">
-          Provably Immutable.
+      <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1]">
+        Transparent Forestry <br className="hidden md:block" />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+          Carbon Credits.
         </span>
       </h1>
 
-      <p className="text-lg md:text-xl text-slate-400 max-w-3xl leading-relaxed">
-        VeriCredit AI leverages DeepForest ML Vision, Earth Engine Satellite Analytics, and strict Vertex Generative AI mapping to automate compliance for high-integrity Polygon-native carbon offsets.
+      <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl leading-relaxed">
+        Leveraging DeepForest ML, Satellite Analytics, and Immutable Ledgers to automate compliance for high-integrity carbon offsets.
       </p>
 
-      <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 pt-4">
-        <Link href="/login" className="btn-primary text-xl px-10 py-5 font-extrabold shadow-lg hover:scale-105 transition-transform duration-200">
-          🚀 Get Started
-        </Link>
-        <Link href="/login" className="btn-secondary text-xl px-10 py-5 font-extrabold hover:scale-105 transition-transform duration-200">
-          Connect Wallet
-        </Link>
+      <div className="flex flex-col sm:flex-row gap-4 pt-4">
+        <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full font-bold shadow-xl hover:scale-105 transition-all">
+          <Link href="/login">🚀 Get Started <ArrowRight className="ml-2 w-5 h-5" /></Link>
+        </Button>
+        <Button asChild variant="outline" size="lg" className="text-lg px-10 h-14 rounded-full font-bold hover:bg-secondary/50 transition-all">
+          <Link href="/login">Connect Wallet</Link>
+        </Button>
       </div>
 
-      {/* Features */}
-      <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-left w-full pt-12 border-t border-slate-800">
-        <div className="panel hover:-translate-y-1 transition-transform duration-300 border-t-2 border-t-tealAccent group">
-          <div className="w-12 h-12 rounded-lg bg-tealAccent/10 flex items-center justify-center mb-4 group-hover:bg-tealAccent/20 transition-colors">
-            <span className="text-2xl">📸</span>
-          </div>
-          <h3 className="text-xl font-bold text-tealAccent mb-2">AI Vision</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">Robust DeepForest algorithms process high-resolution photography rendering bounding boxes for accurate tree counts and canopy survival models.</p>
-        </div>
-        <div className="panel hover:-translate-y-1 transition-transform duration-300 border-t-2 border-t-climateGreen group">
-          <div className="w-12 h-12 rounded-lg bg-climateGreen/10 flex items-center justify-center mb-4 group-hover:bg-climateGreen/20 transition-colors">
-            <span className="text-2xl">🛰️</span>
-          </div>
-          <h3 className="text-xl font-bold text-climateGreen mb-2">Satellite Auth</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">Backend endpoints query Google Earth Engine leveraging Sentinel-2 resolutions parsing direct NDVI indices and biomass estimates.</p>
-        </div>
-        <div className="panel hover:-translate-y-1 transition-transform duration-300 border-t-2 border-t-blue-500 group">
-          <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
-            <span className="text-2xl">🔗</span>
-          </div>
-          <h3 className="text-xl font-bold text-blue-400 mb-2">Web3 Ledgers</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">Secure, low-friction minting via audited ERC-1155 smart contracts handling immutable generation events directly on Polygon.</p>
-        </div>
+      {/* Features Grid */}
+      <div className="mt-28 grid grid-cols-1 md:grid-cols-3 gap-8 text-left w-full pt-16 border-t border-border">
+        <Card className="group hover:border-primary/50 transition-all duration-300">
+          <CardHeader>
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <Camera className="w-6 h-6 text-primary" />
+            </div>
+            <CardTitle className="text-xl font-bold">ML Vision</CardTitle>
+            <CardDescription className="text-muted-foreground leading-relaxed">
+              DeepForest algorithms process high-res photography to accurately detect tree counts and canopy survival models.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card className="group hover:border-blue-500/50 transition-all duration-300">
+          <CardHeader>
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <Satellite className="w-6 h-6 text-blue-500" />
+            </div>
+            <CardTitle className="text-xl font-bold text-blue-500">Satellite Auth</CardTitle>
+            <CardDescription className="text-muted-foreground leading-relaxed">
+              Google Earth Engine integration parses direct NDVI indices and biomass estimates from Sentinel-2 imagery.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card className="group hover:border-purple-500/50 transition-all duration-300">
+          <CardHeader>
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <Database className="w-6 h-6 text-purple-500" />
+            </div>
+            <CardTitle className="text-xl font-bold text-purple-500">Incorruptible</CardTitle>
+            <CardDescription className="text-muted-foreground leading-relaxed">
+              Low-friction minting via audited ERC-1155 contracts ensures immutable generation events on Polygon.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* How it works */}
-      <div className="w-full pt-12 border-t border-slate-800 pb-8">
-        <h2 className="text-2xl font-bold text-white mb-8">How It Works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="w-full pt-20 border-t border-border pb-12">
+        <h2 className="text-3xl font-bold mb-12">Streamlined Verification</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {[
-            { step: '1', title: 'Submit', desc: 'Upload tree photos and GPS coordinates', icon: '📤' },
-            { step: '2', title: 'Verify', desc: 'AI Vision + Satellite + LLM analysis', icon: '🔬' },
-            { step: '3', title: 'Mint', desc: 'Create CCTS-compliant NFT credits', icon: '⛏' },
-            { step: '4', title: 'Trade/Retire', desc: 'Buy, sell, or retire for compliance', icon: '🔥' },
-          ].map(s => (
-            <div key={s.step} className="text-center">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-climateGreen/20 to-tealAccent/20 border border-climateGreen/30 flex items-center justify-center mx-auto mb-3 text-2xl">
-                {s.icon}
+            { step: '1', title: 'Submit', desc: 'Secure data upload', icon: <Zap className="w-6 h-6" /> },
+            { step: '2', title: 'Analyze', desc: 'AI + Satellite MRV', icon: <ShieldCheck className="w-6 h-6" /> },
+            { step: '3', title: 'Validate', desc: 'CCTS Compliance', icon: <CheckCircle2 className="w-6 h-6" /> },
+            { step: '4', title: 'Mint', desc: 'Asset Tokenization', icon: <ArrowRight className="w-6 h-6" /> },
+          ].map((s) => (
+            <div key={s.step} className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-blue-500/10 border border-border flex items-center justify-center mb-4 transition-transform hover:rotate-6">
+                <div className="text-primary">{s.icon}</div>
               </div>
-              <p className="text-xs text-climateGreen font-bold mb-1">STEP {s.step}</p>
-              <p className="font-bold text-white mb-1">{s.title}</p>
-              <p className="text-xs text-slate-400">{s.desc}</p>
+              <span className="text-[10px] uppercase font-black tracking-widest text-primary/60 mb-1">Step {s.step}</span>
+              <h4 className="font-bold text-lg mb-1">{s.title}</h4>
+              <p className="text-xs text-muted-foreground">{s.desc}</p>
             </div>
           ))}
         </div>

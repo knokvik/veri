@@ -2,6 +2,9 @@
 
 import { useWalletInfo } from '../hooks/useWalletInfo';
 import { useProjectStore } from '../lib/projectStore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Wallet, Link as LinkIcon, ShieldCheck, History, Coins } from "lucide-react";
 
 export default function WalletCard() {
   const { address, isConnected, formattedAddress, formattedBalance, chain } = useWalletInfo();
@@ -12,65 +15,77 @@ export default function WalletCard() {
 
   if (!isConnected) {
     return (
-      <div className="panel border-l-4 border-l-amber-500">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-900/40 flex items-center justify-center text-amber-400 text-lg">⚠️</div>
-          <div>
-            <h4 className="text-sm font-semibold text-amber-400">Wallet Not Connected</h4>
-            <p className="text-xs text-slate-400">Connect your wallet to view balances and interact with smart contracts.</p>
+      <Card className="border-l-4 border-l-amber-500 bg-amber-500/5">
+        <CardContent className="flex items-center gap-4 pt-6">
+          <div className="w-12 h-12 rounded-none bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <Wallet className="w-6 h-6" />
           </div>
-        </div>
-      </div>
+          <div>
+            <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest">Wallet Not Connected</h4>
+            <p className="text-xs text-muted-foreground mt-1">Connect your wallet to view balances and interact with carbon credits.</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="panel border-l-4 border-l-tealAccent">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-tealAccent/20 flex items-center justify-center">
-            <span className="text-tealAccent text-lg">🔗</span>
+    <Card className="border-l-4 border-l-primary bg-card/50 shadow-sm transition-all hover:bg-card">
+      <CardHeader className="flex flex-row items-start justify-between pb-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center text-primary">
+            <LinkIcon className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-slate-200">Connected Wallet</h4>
-            <p className="text-xs font-mono text-tealAccent">{formattedAddress}</p>
+            <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Active Identity</h4>
+            <p className="text-sm font-mono font-bold text-primary mt-0.5">{formattedAddress}</p>
           </div>
         </div>
         {chain && (
-          <span className="text-[10px] bg-purple-900/40 border border-purple-500/50 text-purple-300 px-2 py-0.5 rounded-full font-semibold">
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold px-3">
             {chain.name}
-          </span>
+          </Badge>
         )}
-      </div>
+      </CardHeader>
 
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-          <p className="text-xs text-slate-400 mb-1">Balance</p>
-          <p className="text-sm font-bold text-white">{formattedBalance}</p>
-        </div>
-        <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-          <p className="text-xs text-slate-400 mb-1">Active Tokens</p>
-          <p className="text-sm font-bold text-climateGreen">{activeTokens.length}</p>
-        </div>
-        <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-          <p className="text-xs text-slate-400 mb-1">Retired</p>
-          <p className="text-sm font-bold text-blue-400">{retiredTokens.length}</p>
-        </div>
-      </div>
-
-      {activeTokens.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-slate-800">
-          <p className="text-xs text-slate-400 mb-2">Owned Credits</p>
-          <div className="space-y-1">
-            {activeTokens.slice(0, 3).map(t => (
-              <div key={t.tokenId} className="flex justify-between text-xs">
-                <span className="text-slate-300 truncate max-w-[60%]">{t.projectName}</span>
-                <span className="font-mono text-tealAccent">{t.amount} TKN</span>
-              </div>
-            ))}
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-muted/30 rounded-none p-4 border border-border/50 text-center transition-colors hover:bg-muted/50">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-center gap-1">
+              <Coins className="w-3 h-3" /> Balance
+            </p>
+            <p className="text-lg font-black text-foreground">{formattedBalance}</p>
+          </div>
+          <div className="bg-muted/30 rounded-none p-4 border border-border/50 text-center transition-colors hover:bg-muted/50">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-center gap-1">
+              <ShieldCheck className="w-3 h-3" /> Credits
+            </p>
+            <p className="text-lg font-black text-primary">{activeTokens.length}</p>
+          </div>
+          <div className="bg-muted/30 rounded-none p-4 border border-border/50 text-center transition-colors hover:bg-muted/50">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-center gap-1">
+              <History className="w-3 h-3" /> Retired
+            </p>
+            <p className="text-lg font-black text-blue-500">{retiredTokens.length}</p>
           </div>
         </div>
-      )}
-    </div>
+
+        {activeTokens.length > 0 && (
+          <div className="pt-2">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+              Recent Inventory <div className="h-px flex-grow bg-border" />
+            </h5>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {activeTokens.slice(0, 4).map(t => (
+                <div key={t.tokenId} className="flex justify-between items-center p-2 rounded-none bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
+                  <span className="text-[11px] font-bold truncate max-w-[140px]">{t.projectName}</span>
+                  <Badge variant="secondary" className="text-[9px] font-mono font-bold">{t.amount} TKN</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

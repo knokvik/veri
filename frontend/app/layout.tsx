@@ -1,6 +1,14 @@
 import './globals.css';
 import Navbar from '../components/Navbar';
 import { Providers } from './providers';
+import { Figtree } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const figtree = Figtree({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  weight: ['300', '400'],
+});
 
 export const metadata = {
   title: 'VeriCredit AI | CCTS Compliant Carbon Market',
@@ -13,16 +21,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", figtree.variable)} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="min-h-screen flex flex-col" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <body className={cn("min-h-screen flex flex-col antialiased", figtree.className)}>
         <Providers>
           <Navbar />
-          <main className="flex-grow p-4 md:p-8">
+          <main className="flex-grow">
             {children}
           </main>
           <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500 print:hidden">

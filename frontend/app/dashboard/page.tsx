@@ -5,6 +5,10 @@ import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProjectStore } from '../../lib/projectStore';
 import WalletCard from '../../components/WalletCard';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Database, Sparkles, History, LayoutDashboard, Settings2, ExternalLink, Trash2 } from "lucide-react"
 
 export default function Dashboard() {
   const { isAuthorized, loading, accessDenied } = useProtectedRoute();
@@ -12,10 +16,17 @@ export default function Dashboard() {
   const { projects, ownedTokens, loadSampleData, clearAll } = useProjectStore();
 
   if (loading) {
-    return <div className="text-center mt-20 text-slate-400 animate-pulse">Verifying secure access...</div>;
+    return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Verifying secure access...</div>;
   }
   if (accessDenied) {
-    return <div className="text-center mt-20 text-red-400 panel max-w-md mx-auto">{accessDenied}</div>;
+    return (
+      <Card className="max-w-md mx-auto mt-20 border-destructive cover">
+        <CardHeader>
+          <CardTitle className="text-destructive">Access Denied</CardTitle>
+          <CardDescription>{accessDenied}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
   if (!isAuthorized) return null;
 
@@ -24,131 +35,157 @@ export default function Dashboard() {
   const retiredCount = ownedTokens.filter(t => t.retired).length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 mt-6 animate-fadeIn">
+    <div className="max-w-7xl mx-auto space-y-8 mt-6 animate-fadeIn pb-12 px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
         <div>
-          <h2 className="text-3xl font-bold text-slate-100">Welcome Back</h2>
-          <p className="text-slate-400 mt-1">
-            {user?.email && user.email !== 'wallet-user' ? `Logged in as ${user.email}` : 'Connected via Web3 Wallet'}
-            {isAdmin && <span className="ml-2 text-red-400 font-semibold text-xs">[ADMIN]</span>}
-          </p>
+          <h2 className="text-4xl font-black tracking-tight">Executive Dashboard</h2>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary" className="font-mono text-[10px] py-0 px-2">
+              {user?.email && user.email !== 'wallet-user' ? user.email : 'Web3 Identity'}
+            </Badge>
+            {isAdmin && <Badge variant="destructive" className="text-[10px] py-0 px-2 font-bold italic">ADMIN</Badge>}
+          </div>
         </div>
-        <div className="flex gap-3">
-          <button
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={loadSampleData}
-            className="text-xs bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-white transition-colors border border-slate-500"
+            className="h-9 gap-2"
           >
-            🧪 Load Sample Data
-          </button>
+            <Sparkles className="w-3.5 h-3.5" /> Load Sample Data
+          </Button>
           {projects.length > 0 && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearAll}
-              className="text-xs bg-slate-800 hover:bg-red-900/50 px-3 py-2 rounded text-red-400 transition-colors border border-slate-700"
+              className="h-9 text-destructive hover:bg-destructive hover:text-white border border-border"
             >
-              Clear Data
-            </button>
+              <Trash2 className="w-3.5 h-3.5 mr-2" /> Clear
+            </Button>
           )}
           {subscriptionTier !== 'free' && (
-            <Link href="/submit-project" className="btn-primary text-sm px-6 py-2">
-              + Submit New Project
-            </Link>
+            <Button asChild size="sm" className="h-9 px-6 shadow-lg">
+              <Link href="/submit-project"><Plus className="w-4 h-4 mr-1" /> New Project</Link>
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Wallet Card */}
       <WalletCard />
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="panel flex flex-col justify-between hover:border-slate-500 transition-colors">
-          <div>
-            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Total Projects</h3>
-            <span className="text-4xl font-extrabold text-white">{projects.length}</span>
-          </div>
-          <div className="mt-4 pt-4 border-t border-slate-800 text-sm text-climateGreen">
-            {verifiedCount} verified
-          </div>
-        </div>
+        <Card className="hover:border-primary transition-colors shadow-sm bg-card">
+          <CardHeader className="pb-2">
+            <CardDescription className="uppercase tracking-widest text-[10px] font-black">Total Assets</CardDescription>
+            <CardTitle className="text-4xl font-black tracking-tighter">{projects.length}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-xs font-medium text-primary">
+              <div className="w-1.5 h-1.5 rounded-none bg-primary animate-pulse" />
+              {verifiedCount} verified certificates
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="panel flex flex-col justify-between hover:border-slate-500 transition-colors">
-          <div>
-            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Minted Credits</h3>
-            <span className="text-4xl font-extrabold text-white">{mintedCount}</span>
-          </div>
-          <div className="mt-4 pt-4 border-t border-slate-800 text-sm text-climateGreen">
-            {ownedTokens.filter(t => !t.retired).length} active tokens
-          </div>
-        </div>
+        <Card className="hover:border-primary transition-colors shadow-sm bg-card">
+          <CardHeader className="pb-2">
+            <CardDescription className="uppercase tracking-widest text-[10px] font-black">Inventory</CardDescription>
+            <CardTitle className="text-4xl font-black tracking-tighter">{mintedCount}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-xs font-medium text-primary">
+              <Database className="w-3 h-3" /> {ownedTokens.filter(t => !t.retired).length} active tokens
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="panel flex flex-col justify-between hover:border-slate-500 transition-colors">
-          <div>
-            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Retired Portfolio</h3>
-            <span className="text-4xl font-extrabold text-blue-400">{retiredCount}</span>
-          </div>
-          <div className="mt-4 pt-4 border-t border-slate-800 text-sm text-blue-300">
-            CCTS Compliance certificates
-          </div>
-        </div>
+        <Card className="hover:border-blue-500 transition-colors shadow-sm bg-card">
+          <CardHeader className="pb-2">
+            <CardDescription className="uppercase tracking-widest text-[10px] font-black">Impact</CardDescription>
+            <CardTitle className="text-4xl font-black tracking-tighter text-blue-500">{retiredCount}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-xs font-medium text-blue-500">
+              <History className="w-3 h-3" /> CCTS Compliance Offset
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Two column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Projects */}
-        <div className="panel">
-          <h3 className="text-xl font-bold text-slate-100 mb-6">Recent Projects</h3>
-          {projects.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <p className="text-lg mb-2">No projects yet</p>
-              <p className="text-sm">Click "Load Sample Data" to populate test data, or submit a new project.</p>
-            </div>
-          ) : (
-            <ul className="space-y-4">
-              {projects.slice(0, 5).map(p => (
-                <li key={p.id} className="flex justify-between items-center text-sm border-b border-slate-800 pb-3 last:border-0">
-                  <div>
-                    <span className="text-slate-200 font-medium">{p.name}</span>
-                    {p.tokenId && (
-                      <span className="ml-2 text-[10px] font-mono text-tealAccent bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">
-                        TKN #{p.tokenId}
-                      </span>
-                    )}
+      {/* Main Content Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activity */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <LayoutDashboard className="w-5 h-5 text-primary" /> Recent Projects
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {projects.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-none">
+                <p className="font-semibold text-lg mb-1">No activity yet</p>
+                <p className="text-sm">Submit your first project to begin verification.</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {projects.slice(0, 5).map(p => (
+                  <div key={p.id} className="flex justify-between items-center py-3 border-b border-border last:border-0 hover:bg-muted/30 px-2 rounded-none transition-colors group">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-2 h-2 rounded-none ${p.status === 'minted' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                      <div>
+                        <p className="font-bold text-sm">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono">ID: {p.id.slice(0, 8)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {p.tokenId && <Badge variant="outline" className="text-[10px] font-mono">TKN #{p.tokenId}</Badge>}
+                      <Badge className={`text-[10px] font-black ${
+                        p.status === 'minted' ? 'bg-green-500 text-white' :
+                        p.status === 'verified' ? 'bg-blue-500 text-white' :
+                        'bg-amber-500 text-black'
+                      }`}>
+                        {p.status.toUpperCase()}
+                      </Badge>
+                      <Button asChild variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Link href={`/verification-report?id=${p.id}`}><ExternalLink className="w-3.5 h-3.5" /></Link>
+                      </Button>
+                    </div>
                   </div>
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${
-                    p.status === 'minted' ? 'bg-green-900/20 border-green-600 text-green-400' :
-                    p.status === 'verified' ? 'bg-blue-900/20 border-blue-600 text-blue-400' :
-                    p.status === 'retired' ? 'bg-slate-900 border-slate-600 text-slate-400' :
-                    'bg-amber-900/20 border-amber-600 text-amber-400'
-                  }`}>
-                    {p.status.toUpperCase()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Quick Links */}
-        <div className="panel">
-          <h3 className="text-xl font-bold text-slate-100 mb-6">Quick Links</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="/my-projects" className="block p-4 border border-slate-700 rounded-lg bg-slate-900 hover:bg-slate-800 hover:border-slate-500 transition-all text-center text-sm font-semibold text-tealAccent">
-              📋 View My Projects
-            </Link>
-            <Link href="/portfolio" className="block p-4 border border-slate-700 rounded-lg bg-slate-900 hover:bg-slate-800 hover:border-slate-500 transition-all text-center text-sm font-semibold text-tealAccent">
-              💼 Manage Portfolio
-            </Link>
-            <Link href="/marketplace" className="block p-4 border border-slate-700 rounded-lg bg-slate-900 hover:bg-slate-800 hover:border-slate-500 transition-all text-center text-sm font-semibold text-tealAccent col-span-2">
-              🏪 Explore The Marketplace
-            </Link>
-            {isAdmin && (
-              <Link href="/admin" className="block p-4 border border-red-900/50 rounded-lg bg-red-900/10 hover:bg-red-900/20 hover:border-red-700 transition-all text-center text-sm font-semibold text-red-400 col-span-2">
-                🛡️ Admin Panel — All Projects
-              </Link>
+                ))}
+              </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        {/* Console / Links */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-primary" /> Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-3">
+            <Button asChild variant="outline" className="justify-start h-12 gap-3 text-sm font-semibold border-border hover:border-primary transition-all">
+              <Link href="/my-projects">📋 My Portfolio</Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start h-12 gap-3 text-sm font-semibold border-border hover:border-primary transition-all">
+              <Link href="/marketplace">🏪 Marketplace</Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start h-12 gap-3 text-sm font-semibold border-border hover:border-primary transition-all">
+              <Link href="/portfolio">💼 Assets & Credits</Link>
+            </Button>
+            {isAdmin && (
+              <Button asChild variant="secondary" className="justify-start h-12 gap-3 text-sm font-bold bg-destructive text-destructive-foreground hover:bg-destructive/80 mt-4">
+                <Link href="/admin">🛡️ Global Admin Panel</Link>
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

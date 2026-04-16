@@ -2,10 +2,10 @@ export default function CCTSBadge({ schemeType }: { schemeType: 'Compliance' | '
   const isCompliance = schemeType === 'Compliance';
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+      className={`px-3 py-1 rounded-none text-xs font-semibold border ${
         isCompliance
-          ? 'bg-blue-900/40 border-blue-500 text-blue-300'
-          : 'bg-green-900/40 border-green-500 text-green-300'
+          ? 'bg-blue-600 text-white border-blue-400'
+          : 'bg-emerald-600 text-white border-emerald-400'
       }`}
       title={`India CCTS 2026 ${schemeType} Market Approved`}
     >

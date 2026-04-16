@@ -1,5 +1,8 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: path.join(__dirname, './'),
   webpack: (config) => {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     config.resolve.fallback = {

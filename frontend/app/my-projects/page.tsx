@@ -4,100 +4,130 @@ import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { useProjectStore } from '../../lib/projectStore';
 import Link from 'next/link';
 import CCTSBadge from '../../components/CCTSBadge';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Plus, TreePine, Activity, Eye, MapPin, ExternalLink } from "lucide-react"
 
 export default function MyProjects() {
   const { isAuthorized, loading, accessDenied } = useProtectedRoute();
   const { projects } = useProjectStore();
 
-  if (loading) return <div className="text-center mt-20 text-slate-400 animate-pulse">Loading...</div>;
-  if (accessDenied) return <div className="text-center mt-20 text-red-400 panel max-w-md mx-auto">{accessDenied}</div>;
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Loading projects...</div>;
+  if (accessDenied) {
+     return (
+      <Card className="max-w-md mx-auto mt-20 border-destructive">
+        <CardHeader>
+          <CardTitle className="text-destructive">Access Denied</CardTitle>
+          <CardDescription>{accessDenied}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
   if (!isAuthorized) return null;
 
-  const statusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'minted': return 'border-l-climateGreen';
-      case 'verified': return 'border-l-blue-500';
-      case 'retired': return 'border-l-slate-500';
-      case 'listed': return 'border-l-amber-500';
-      default: return 'border-l-slate-600';
+      case 'minted': return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">MINTED</Badge>;
+      case 'verified': return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">VERIFIED</Badge>;
+      case 'retired': return <Badge variant="outline" className="text-muted-foreground">RETIRED</Badge>;
+      case 'listed': return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">LISTED</Badge>;
+      default: return <Badge variant="secondary">{status.toUpperCase()}</Badge>;
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 mt-6 animate-fadeIn">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-slate-800 pb-6">
+    <div className="max-w-7xl mx-auto space-y-8 mt-6 animate-fadeIn pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
         <div>
-          <h2 className="text-3xl font-bold text-slate-100">My Verified Projects</h2>
-          <p className="text-slate-400 mt-1">Review your submitted afforestation data and verification results.</p>
+          <h2 className="text-4xl font-black tracking-tight">Project Portfolio</h2>
+          <p className="text-muted-foreground mt-2 text-sm font-medium">Review your forest assets and active CCTS compliance certificates.</p>
         </div>
-        <Link href="/submit-project" className="btn-primary text-sm px-6 py-2">
-          + Submit New Project
-        </Link>
+        <Button asChild className="shadow-lg shadow-primary/20 h-10 px-6">
+          <Link href="/submit-project">
+            <Plus className="w-4 h-4 mr-2" /> New Submission
+          </Link>
+        </Button>
       </div>
 
       {projects.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">
-          <p className="text-4xl mb-3">📋</p>
-          <p className="text-lg">No projects submitted yet</p>
-          <p className="text-sm mt-2">
-            <Link href="/submit-project" className="text-tealAccent hover:underline">Submit your first project</Link>
-            {' '}or{' '}
-            <Link href="/dashboard" className="text-tealAccent hover:underline">load sample data from the dashboard</Link>.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map(p => (
-            <div key={p.id} className={`panel border-l-4 ${statusColor(p.status)} hover:border-slate-500 transition-colors`}>
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-white">{p.name}</h3>
-                <CCTSBadge schemeType={p.schemeType === 'compliance' ? 'Compliance' : 'Offset'} />
-              </div>
-
-              <p className="text-sm text-slate-400 mb-4">📍 {p.lat}, {p.lng}</p>
-
-              <div className="flex flex-wrap gap-3 text-xs font-mono text-slate-300 mb-4">
-                {p.visionResult && (
-                  <>
-                    <span className="bg-slate-900 px-2 py-1 rounded border border-slate-700">
-                      🌳 Trees: {p.visionResult.tree_count}
-                    </span>
-                    <span className="bg-slate-900 px-2 py-1 rounded border border-slate-700">
-                      💚 Health: {p.visionResult.average_health_score}%
-                    </span>
-                  </>
-                )}
-                {p.satelliteResult && (
-                  <span className="bg-slate-900 px-2 py-1 rounded border border-slate-700">
-                    🛰️ NDVI: {p.satelliteResult.ndvi}
-                  </span>
-                )}
-                {p.llmResult && (
-                  <span className="bg-blue-900/30 px-2 py-1 rounded border border-blue-700 text-blue-300">
-                    🧠 Score: {p.llmResult.additionality_score}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center pt-3 border-t border-slate-800">
-                <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${
-                  p.status === 'minted' ? 'bg-green-900/20 border-green-600 text-green-400' :
-                  p.status === 'verified' ? 'bg-blue-900/20 border-blue-600 text-blue-400' :
-                  p.status === 'retired' ? 'bg-slate-900 border-slate-600 text-slate-400' :
-                  'bg-amber-900/20 border-amber-600 text-amber-400'
-                }`}>
-                  {p.status.toUpperCase()}
-                  {p.tokenId && <span className="ml-1 text-slate-500">· TKN #{p.tokenId}</span>}
-                </span>
-
-                <Link
-                  href={`/verification-report?id=${p.id}`}
-                  className="text-xs text-tealAccent hover:underline"
-                >
-                  View Report →
-                </Link>
-              </div>
+        <Card className="bg-muted/30 border-dashed py-16">
+          <CardContent className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <TreePine className="w-8 h-8 text-muted-foreground" />
             </div>
+            <div>
+              <p className="text-xl font-bold tracking-tight">No projects found</p>
+              <p className="text-muted-foreground text-sm max-w-sm mx-auto mt-1">
+                Your portfolio is empty. Submit a project or load sample data from the dashboard to begin.
+              </p>
+            </div>
+            <div className="flex gap-4 pt-4">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard">Go to Dashboard</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/submit-project">Start Submission</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {projects.map(p => (
+            <Card key={p.id} className="group hover:border-primary/50 transition-all duration-300 relative overflow-hidden shadow-sm">
+              <div className={`absolute top-0 left-0 w-1.5 h-full ${
+                p.status === 'minted' ? 'bg-green-500' :
+                p.status === 'verified' ? 'bg-blue-500' :
+                p.status === 'listed' ? 'bg-amber-500' : 'bg-muted'
+              }`} />
+              
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-start mb-2">
+                  <CardTitle className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors">{p.name}</CardTitle>
+                  <CCTSBadge schemeType={p.schemeType === 'compliance' ? 'Compliance' : 'Offset'} />
+                </div>
+                <CardDescription className="flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5" /> {p.lat}, {p.lng}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {p.visionResult && (
+                    <Badge variant="secondary" className="font-mono text-[10px] gap-1.5 bg-muted/60 border-border">
+                      <TreePine className="w-3 h-3" /> Trees: {p.visionResult.tree_count}
+                    </Badge>
+                  )}
+                   {p.visionResult && (
+                    <Badge variant="secondary" className="font-mono text-[10px] gap-1.5 bg-muted/60 border-border">
+                      <Activity className="w-3 h-3" /> Health: {p.visionResult.average_health_score}%
+                    </Badge>
+                  )}
+                  {p.llmResult && (
+                    <Badge className="font-mono text-[10px] gap-1.5 bg-blue-500/10 text-blue-500 border-blue-500/10 hover:bg-blue-500/20">
+                      <Activity className="w-3 h-3" /> Additionality: {p.llmResult.additionality_score}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center pt-4 border-t border-border">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Platform Status</span>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(p.status)}
+                      {p.tokenId && <span className="text-[11px] font-mono text-muted-foreground"># {p.tokenId}</span>}
+                    </div>
+                  </div>
+
+                  <Button asChild variant="ghost" size="sm" className="group/btn text-xs font-bold gap-2 hover:bg-primary/5 hover:text-primary transition-all">
+                    <Link href={`/verification-report?id=${p.id}`}>
+                      Full Report <ExternalLink className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import verify, upload
+import os
+from dotenv import load_dotenv
+
+# Load shared environment variables from the project root
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 app = FastAPI(
     title="VeriCredit AI Backend",

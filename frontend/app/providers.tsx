@@ -7,6 +7,7 @@ import { polygonAmoy } from 'wagmi/chains';
 import { useState } from 'react';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ProjectStoreProvider } from '../lib/projectStore';
+import { ThemeProvider } from '../components/theme-provider';
 
 // IMPORTANT: Get a Project ID from https://cloud.reown.com/
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '12f02977989261322d4cebd295c74b90ff731f2e2350af77e44517e3b2780b40';
@@ -24,16 +25,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme({
-            accentColor: '#2e7d32',
-            accentColorForeground: 'white',
-          })}>
-          <AuthProvider>
-            <ProjectStoreProvider>
-              {children}
-            </ProjectStoreProvider>
-          </AuthProvider>
-        </RainbowKitProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <RainbowKitProvider theme={darkTheme({
+              accentColor: '#2e7d32',
+              accentColorForeground: 'white',
+            })}>
+            <AuthProvider>
+              <ProjectStoreProvider>
+                {children}
+              </ProjectStoreProvider>
+            </AuthProvider>
+          </RainbowKitProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

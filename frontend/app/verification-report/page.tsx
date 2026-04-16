@@ -6,14 +6,26 @@ import { useProjectStore } from '../../lib/projectStore';
 import VerificationReport from '../../components/VerificationReport';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { ChevronLeft, FileSearch, TreePine } from "lucide-react"
 
 function ReportContent() {
   const { isAuthorized, loading, accessDenied } = useProtectedRoute();
   const { projects } = useProjectStore();
   const searchParams = useSearchParams();
 
-  if (loading) return <div className="text-center mt-20 text-slate-400 animate-pulse">Loading...</div>;
-  if (accessDenied) return <div className="text-center mt-20 text-red-400 panel max-w-md mx-auto">{accessDenied}</div>;
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Loading report assets...</div>;
+  if (accessDenied) {
+     return (
+      <Card className="max-w-md mx-auto mt-20 border-destructive">
+        <CardHeader>
+          <CardTitle className="text-destructive">Access Denied</CardTitle>
+          <CardDescription>{accessDenied}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
   if (!isAuthorized) return null;
 
   const projectId = searchParams.get('id');
@@ -21,22 +33,33 @@ function ReportContent() {
 
   if (!project) {
     return (
-      <div className="max-w-md mx-auto mt-20 panel text-center space-y-4">
-        <p className="text-xl text-slate-300">No verification report found</p>
-        <p className="text-sm text-slate-500">Submit a project first to generate a verification report.</p>
-        <Link href="/submit-project" className="btn-primary inline-block px-6 py-2 text-sm">
-          Submit a Project
-        </Link>
-      </div>
+      <Card className="max-w-md mx-auto mt-20 border-dashed bg-muted/30">
+        <CardContent className="flex flex-col items-center py-12 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+             <FileSearch className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-bold tracking-tight">Report Not Found</CardTitle>
+            <CardDescription className="max-w-[250px] mx-auto mt-1">
+              We couldn't locate a verification certificate for this project ID.
+            </CardDescription>
+          </div>
+          <Button asChild size="sm" className="mt-4">
+            <Link href="/submit-project"><TreePine className="mr-2 w-4 h-4" /> Submit a Project</Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-6 space-y-6 animate-fadeIn">
-      <div className="flex justify-between items-center">
-        <Link href="/my-projects" className="text-sm text-tealAccent hover:underline">
-          ← Back to My Projects
-        </Link>
+    <div className="max-w-4xl mx-auto mt-6 space-y-6 animate-fadeIn pb-12">
+      <div className="flex justify-between items-center px-1">
+        <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-primary transition-colors h-8 -ml-2">
+          <Link href="/my-projects">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back to My Projects
+          </Link>
+        </Button>
       </div>
 
       <VerificationReport
@@ -56,7 +79,7 @@ function ReportContent() {
 
 export default function VerificationReportPage() {
   return (
-    <Suspense fallback={<div className="text-center mt-20 text-slate-400 animate-pulse">Loading report...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse">Initializing renderer...</div>}>
       <ReportContent />
     </Suspense>
   );
