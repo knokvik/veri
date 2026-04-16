@@ -66,53 +66,50 @@ export default function SubmitProject() {
     setCurrentProject(newProject);
 
     try {
-      pushLog('Initiating verification pipeline...');
+      pushLog('Initiating Agentic AI verification pipeline...');
 
-      // Step 1: Mock Upload/IPFS
-      pushLog('1. Processing images...');
-      await new Promise(r => setTimeout(r, 1000));
-      const simulatedHash = `QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG`;
-      newProject.ipfsHash = simulatedHash;
+      // Call Real Backend for full Pipeline
+      pushLog('1. Sending data to LangGraph Agentic Pipeline...');
+      const formData = new FormData();
+      formData.append('project_id', projectId);
+      formData.append('lat', lat);
+      formData.append('lng', lng);
+      formData.append('project_claims', projectName + ' - ' + schemeType);
+      if (files.length > 0) formData.append('file', files[0]);
 
-      // Step 2: Call Real Backend for Vision
-      pushLog('2. Requesting DeepForest Vision Analysis from Backend...');
-      const visionRes = await fetch('http://localhost:8000/api/verify/vision', {
+      const agentRes = await fetch('http://localhost:8000/api/verify/agentic-pipeline', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: projectId, lat, lng })
+        body: formData
       });
-      const visionData = await visionRes.json();
-      newProject.visionResult = visionData.vision_results;
-      pushLog(`   → Backend Success: ${visionData.vision_results.tree_count} trees detected.`);
+      
+      if (!agentRes.ok) {
+         throw new Error(`Pipeline failed: ${agentRes.statusText}`);
+      }
+      const data = await agentRes.json();
+      
+      pushLog(`   → Vision AI: ${data.vision.tree_count || 0} trees detected.`);
+      pushLog(`   → Earth Engine: NDVI ${(data.satellite.ndvi || 0).toFixed(2)} recorded.`);
+      pushLog(`   → Semantic AI: Risk Level [${data.semantic.greenwashing_risk}]`);
+      pushLog(`   → Consensus Engine: ${data.decision.status} (Score: ${data.decision.confidence_score})`);
 
-      // Step 3: Call Real Backend for Satellite
-      pushLog('3. Requesting Earth Engine Satellite Data from Backend...');
-      const satRes = await fetch('http://localhost:8000/api/verify/satellite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: projectId, lat, lng })
-      });
-      const satData = await satRes.json();
-      newProject.satelliteResult = satData.satellite_results;
-      pushLog('   → Backend Success: Satellite data received.');
-
-      // Step 4: Call Real Backend for AI Decision (Vertex Placeholder)
-      pushLog('4. Requesting AI Verification Decision...');
-      const llmRes = await fetch('http://localhost:8000/api/verify/llm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: projectId, lat, lng })
-      });
-      const llmData = await llmRes.json();
-      newProject.llmResult = llmData.llm_results;
-      pushLog('   → AI Audit Complete.');
+      newProject.ipfsHash = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG'; // Mocked IPFS for now
+      newProject.visionResult = data.vision;
+      newProject.satelliteResult = data.satellite;
+      newProject.llmResult = {
+         additionality_score: data.decision.confidence_score,
+         greenwashing_risk: data.semantic.greenwashing_risk,
+         mrv_compliance: data.decision.status === 'APPROVED',
+         final_verification_status: data.decision.status,
+         ccts_eligible: data.decision.status === 'APPROVED',
+         explanation: data.decision.explanation || data.semantic.explanation || "No specific reasoning provided."
+      };
 
       // Update project in store
-      newProject.status = 'verified';
+      newProject.status = data.decision.status === 'APPROVED' ? 'verified' : 'pending';
       updateProject(projectId, newProject);
       setCurrentProject({ ...newProject });
 
-      pushLog('✅ Full verification pipeline complete via Backend APIs.');
+      pushLog('✅ Full agentic pipeline complete.');
       setStep('report');
 
     } catch (e) {

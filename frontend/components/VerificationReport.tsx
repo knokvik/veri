@@ -86,16 +86,23 @@ export default function VerificationReport({
         {/* Overall Score */}
         {llmResult && (
           <div className="mt-4 flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full border-4 border-climateGreen flex items-center justify-center bg-green-900/20">
-              <span className="text-2xl font-black text-climateGreen">{overallScore}</span>
+            <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center ${llmResult.final_verification_status === 'REJECTED' ? 'border-red-500 bg-red-900/20 text-red-500' : 'border-climateGreen bg-green-900/20 text-climateGreen'}`}>
+              <span className="text-2xl font-black">{llmResult.additionality_score}</span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Overall Verification Score</p>
-              <p className="text-xs text-slate-400">Composite of vision, satellite, and AI analysis</p>
+              <p className="text-sm font-semibold text-white">Consensus Engine Score</p>
+              <p className="text-xs text-slate-400">Final score based on Agentic AI penalties and weights</p>
             </div>
           </div>
         )}
       </div>
+
+      {llmResult?.final_verification_status === 'REJECTED' && llmResult.greenwashing_risk === 'Critical' && (
+        <div className="bg-red-900/30 border border-red-500 rounded p-4 text-red-300 text-sm font-mono mt-4">
+          <p className="font-bold text-red-400 mb-1">⚠ PIPELINE ERROR DETECTED</p>
+          <p>The agentic pipeline blocked verification because critical services are offline or data is missing. Please ensure Ollama is running and API keys are configured.</p>
+        </div>
+      )}
 
       {/* ML Vision Results Section */}
       <div className={`panel ${visionResult ? 'border-l-4 border-l-climateGreen' : 'opacity-50'}`}>
@@ -109,7 +116,7 @@ export default function VerificationReport({
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm text-slate-400">Trees Detected</span>
-                <span className="text-lg font-black text-climateGreen">{visionResult.tree_count}</span>
+                <span className={`text-lg font-black ${visionResult.tree_count === 0 ? 'text-red-400' : 'text-climateGreen'}`}>{visionResult.tree_count}</span>
               </div>
             </div>
 
@@ -169,47 +176,41 @@ export default function VerificationReport({
       {/* LLM Verification Section */}
       <div className={`panel ${llmResult ? 'border-l-4 border-l-purple-500' : 'opacity-50'}`}>
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <span className="text-xl">🧠</span> AI Verification Score
+          <span className="text-xl">🧠</span> Agentic AI Output
           <span className="text-xs bg-purple-900/40 border border-purple-500/40 text-purple-300 px-2 py-0.5 rounded-full ml-2">
-            PLACEHOLDER — Future Vertex Generative AI
+            LangGraph / Ollama
           </span>
         </h3>
-        {/* 
-          @@@ VERTEX GENERATIVE AI INTEGRATION PLACEHOLDER @@@
-          When connecting Vertex AI, replace the simulated data below with 
-          the actual API response from /api/verify/llm which will call
-          Vertex Generative AI for additionality scoring, greenwashing 
-          detection, full MRV compliance, and final verification decision.
-        */}
 
         {llmResult ? (
           <div className="space-y-3">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm text-slate-400">Additionality Score</span>
-                <span className="font-mono font-bold text-purple-400">{llmResult.additionality_score}/100</span>
-              </div>
-              <ScoreBar value={llmResult.additionality_score} color="bg-purple-500" />
-            </div>
-
             <StatItem
-              label="Greenwashing Risk"
-              value={llmResult.greenwashing_risk}
+              label="Risk Level (Penalty Applied)"
+              value={llmResult.greenwashing_risk.toUpperCase()}
               color={llmResult.greenwashing_risk === 'Low' ? 'text-green-400' : llmResult.greenwashing_risk === 'Medium' ? 'text-amber-400' : 'text-red-400'}
             />
             <StatItem label="MRV Compliance" value={llmResult.mrv_compliance ? 'Passed ✓' : 'Failed ✗'} color={llmResult.mrv_compliance ? 'text-green-400' : 'text-red-400'} />
             <StatItem label="CCTS Eligible" value={llmResult.ccts_eligible ? 'Yes ✓' : 'No ✗'} color={llmResult.ccts_eligible ? 'text-green-400' : 'text-red-400'} />
 
-            <div className="mt-3 bg-slate-900 rounded-lg p-3 border border-slate-800 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-300">Final Status</span>
+            <div className={`mt-3 rounded-lg p-3 border flex items-center justify-between ${llmResult.final_verification_status === 'APPROVED' ? 'bg-slate-900 border-slate-800' : 'bg-red-900/10 border-red-500/50'}`}>
+              <span className="text-sm font-semibold text-slate-300">Final Decision</span>
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                llmResult.final_verification_status === 'Approved'
+                llmResult.final_verification_status === 'APPROVED'
                   ? 'bg-green-900/40 border border-green-500 text-green-400'
                   : 'bg-red-900/40 border border-red-500 text-red-400'
               }`}>
                 {llmResult.final_verification_status}
               </span>
             </div>
+
+            {llmResult.explanation && (
+              <div className="mt-3 bg-indigo-950/30 border border-indigo-900/50 rounded-lg p-4 shadow-inner">
+                <span className="text-xs font-bold text-indigo-400 tracking-wider uppercase mb-1 block">🧠 Agentic AI Reasoning</span>
+                <p className="text-sm text-indigo-100/80 leading-relaxed font-serif">
+                  "{llmResult.explanation}"
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-slate-500 italic">Awaiting AI verification…</p>

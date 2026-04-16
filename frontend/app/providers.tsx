@@ -15,7 +15,7 @@ const config = getDefaultConfig({
   appName: 'VeriCredit AI',
   projectId: projectId,
   chains: [polygonAmoy],
-  ssr: true,
+  ssr: false, 
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {

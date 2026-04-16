@@ -24,6 +24,7 @@ export interface LLMResult {
   mrv_compliance: boolean;
   final_verification_status: string;
   ccts_eligible: boolean;
+  explanation?: string;
 }
 
 export interface Project {

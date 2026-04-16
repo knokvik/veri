@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract VeriCredit is ERC1155, Ownable, ReentrancyGuard {
     uint256 public currentTokenId;
@@ -35,7 +35,7 @@ contract VeriCredit is ERC1155, Ownable, ReentrancyGuard {
     event CreditListed(uint256 indexed listingId, address indexed seller, uint256 tokenId, uint256 amount, uint256 price);
     event CreditBought(uint256 indexed listingId, address indexed buyer, uint256 amount);
 
-    constructor() ERC1155("") Ownable() {}
+    constructor() ERC1155("") Ownable(msg.sender) {}
 
     function mintCredit(
         address account,

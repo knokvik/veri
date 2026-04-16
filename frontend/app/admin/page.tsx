@@ -75,10 +75,10 @@ export default function AdminPanel() {
               <tr className="border-b border-slate-700 text-left text-slate-400">
                 <th className="pb-3 pr-4">Project</th>
                 <th className="pb-3 pr-4">Location</th>
-                <th className="pb-3 pr-4">Scheme</th>
+                <th className="pb-3 pr-4">CCTS Scheme</th>
                 <th className="pb-3 pr-4">Status</th>
-                <th className="pb-3 pr-4">Score</th>
-                <th className="pb-3 pr-4">Token</th>
+                <th className="pb-3 pr-4">Agentic AI Score</th>
+                <th className="pb-3 pr-4">Token ID</th>
                 <th className="pb-3">Actions</th>
               </tr>
             </thead>
@@ -106,8 +106,15 @@ export default function AdminPanel() {
                       {p.status.toUpperCase()}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 font-mono text-blue-400">
-                    {p.llmResult?.additionality_score || '—'}
+                  <td className="py-3 pr-4">
+                    {p.llmResult ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono text-climateGreen text-sm font-bold">{p.llmResult.additionality_score}% Confidence</span>
+                        <span className="text-xs text-slate-400">Risk: <span className={p.llmResult.greenwashing_risk === 'Low' ? 'text-green-400' : 'text-red-400'}>{p.llmResult.greenwashing_risk}</span></span>
+                      </div>
+                    ) : (
+                      <span className="text-slate-500 font-mono text-xs">Pending AI</span>
+                    )}
                   </td>
                   <td className="py-3 pr-4 font-mono text-tealAccent text-xs">
                     {p.tokenId ? `#${p.tokenId}` : '—'}
