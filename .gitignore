@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+backend/venv/
+.npm-cache/
+
+# Next.js Build
+.next/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Hardhat
+artifacts/
+cache/
+typechain-types/
+
+# Secrets
+backend/*.json
+*.json
