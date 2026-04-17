@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { useProjectStore } from '../../lib/projectStore';
-import VerificationReport from '../../components/VerificationReport';
+import ValidationDashboard from '../../components/ValidationDashboard';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ function ReportContent() {
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Loading report assets...</div>;
   if (accessDenied) {
-     return (
+    return (
       <Card className="max-w-md mx-auto mt-20 border-destructive">
         <CardHeader>
           <CardTitle className="text-destructive">Access Denied</CardTitle>
@@ -36,7 +36,7 @@ function ReportContent() {
       <Card className="max-w-md mx-auto mt-20 border-dashed bg-muted/30">
         <CardContent className="flex flex-col items-center py-12 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-             <FileSearch className="w-8 h-8 text-muted-foreground" />
+            <FileSearch className="w-8 h-8 text-muted-foreground" />
           </div>
           <div>
             <CardTitle className="text-xl font-bold tracking-tight">Report Not Found</CardTitle>
@@ -62,17 +62,14 @@ function ReportContent() {
         </Button>
       </div>
 
-      <VerificationReport
-        projectName={project.name}
-        lat={project.lat}
-        lng={project.lng}
-        schemeType={project.schemeType}
-        ipfsHash={project.ipfsHash}
-        visionResult={project.visionResult}
-        satelliteResult={project.satelliteResult}
-        llmResult={project.llmResult}
-        createdAt={project.createdAt}
-      />
+      {project.validationData ? (
+        <ValidationDashboard data={project.validationData} />
+      ) : (
+        <Card className="p-8 text-center text-muted-foreground border-dashed bg-muted/20">
+          <CardTitle className="text-lg">Legacy Report Object</CardTitle>
+          <CardDescription className="mt-2">This report uses deprecated multi-request models. Please re-run verification under the unified Agentic architecture.</CardDescription>
+        </Card>
+      )}
     </div>
   );
 }
