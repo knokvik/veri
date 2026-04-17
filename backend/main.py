@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import verify, upload
 import os
 from dotenv import load_dotenv
 
@@ -22,8 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from routers import verify, upload, validate
+
 app.include_router(verify.router, prefix="/api/verify")
 app.include_router(upload.router, prefix="/api/upload")
+app.include_router(validate.router, prefix="/api/validate")
 
 @app.get("/")
 def read_root():
