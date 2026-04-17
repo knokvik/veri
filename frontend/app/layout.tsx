@@ -1,8 +1,8 @@
 import './globals.css';
 import Navbar from '../components/Navbar';
-import { Providers } from './providers';
 import { Figtree } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { Providers } from './providers';
 
 const figtree = Figtree({
   subsets: ['latin'],

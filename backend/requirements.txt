@@ -9,3 +9,4 @@ earthengine-api==0.1.393
 numpy==1.26.4
 opencv-python-headless==4.9.0.80
 pandas==2.2.1
+google-generativeai

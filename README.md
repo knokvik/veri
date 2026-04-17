@@ -10,6 +10,18 @@ backend/           → FastAPI + DeepForest ML + Google Earth Engine
 contracts/         → Hardhat + Solidity ERC-1155 (VeriCredit.sol)
 ```
 
+## Testing the New Admin Minting Flow & Verification System
+
+1. Visit `/login` to access the portal (or bypass if using mocked protected routes).
+2. Go to `/submit-project` and click **"Load Sample Data"**. This pre-fills authentic Western Ghats Coordinates and mock ground photos.
+3. Click "Start AI Audit Pipeline". The FastAPI backend will analyze the photos (DeepForest), fetch Sentinel-2 data (Google Earth Engine), fetch climatology (NASA POWER), and topography (Open-Meteo) simultaneously. LLM verification is explicitly bypassed.
+4. On the VeriCredit Report generation screen, review the fetched data from all sources.
+5. Click **"Submit for Admin Review"**.
+6. Access `/admin` dashboard.
+7. Connect your Wallet (Polygon Amoy testnet) using the RainbowKit modal.
+8. Locate your pending project in the CCTS Submission Ledger and click the green checkmark (Approve & Mint) to invoke the ERC-1155 Smart Contract.
+9. Verify the Carbon Credit Token is generated in the **Portfolio**.
+
 ## Features
 
 - **Supabase Auth** — Email/password signup, login, forgot password, admin role, subscription tiers (Free/Basic/Premium)
@@ -165,7 +177,8 @@ frontend/
 
 ## Future LLM Integration (Vertex Generative AI)
 
-The LLM verification section is clearly marked as a placeholder throughout the codebase. When integrating:
-1. Replace the simulated data in `submit-project/page.tsx` with actual API call to `/api/verify/llm`
-2. The backend endpoint at `backend/routers/verify.py` → `verify_llm()` is ready for Vertex AI integration
-3. Expected LLM output: `additionality_score`, `greenwashing_risk`, `mrv_compliance`, `final_verification_status`
+The LLM verification section is clearly marked as a placeholder throughout the codebase. When integrating from your friend's laptop:
+1. Open `backend/routers/validate.py`
+2. Locate the `# TODO: Call Vertex Generative AI from friend's laptop here` comment.
+3. Pass `vision_results`, `satellite_results`, and `cross_validation` explicitly into your Vertex prompt.
+4. Replace the static `llm_placeholder` dictionary with the live JSON output from Vertex.
