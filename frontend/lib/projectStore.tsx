@@ -32,11 +32,18 @@ export interface Project {
   lat: string;
   lng: string;
   schemeType: 'compliance' | 'offset';
-  status: 'pending' | 'verified' | 'minted' | 'listed' | 'retired';
+  status: 'pending' | 'pending_admin' | 'verified' | 'minted' | 'listed' | 'retired' | 'rejected';
   ipfsHash?: string;
-  visionResult?: VisionResult;
-  satelliteResult?: SatelliteResult;
-  llmResult?: LLMResult;
+  validationData?: any;
+  visionResult?: VisionResult; // legacy compatibility
+  satelliteResult?: SatelliteResult; // legacy compatibility
+  llmResult?: any; // legacy compatibility
+  adminDecision?: {
+    approvedCredits?: number;
+    approvedAdditionality?: number;
+    adminNotes?: string;
+    decidedAt?: string;
+  };
   tokenId?: number;
   mintedAt?: string;
   createdAt: string;
@@ -81,9 +88,13 @@ const sampleProjects: Project[] = [
     schemeType: 'compliance',
     status: 'minted',
     ipfsHash: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
-    visionResult: { tree_count: 320, average_health_score: 92.4, survival_rate: 0.94 },
-    satelliteResult: { ndvi: 0.76, canopy_cover_percentage: 65.2, biomass_estimate_tons: 45.1, positive_change_from_last_year: '+12.4%', latest_imagery: '2026-04-10' },
-    llmResult: { additionality_score: 88, greenwashing_risk: 'Low', mrv_compliance: true, final_verification_status: 'Approved', ccts_eligible: true },
+    validationData: {
+      status: "APPROVED",
+      layer_1_vision: { model_used: "deepforest", tree_count: 512, average_health_score: 95.0, survival_rate: 98.4 },
+      layer_2_satellite: { baseline_ndvi: 0.15, current_ndvi: 0.82, change_from_baseline: 446.7, canopy_cover_percentage: 86.1 },
+      layer_3_cross_validation: { mismatches_found: false, flags: [], greenwashing_risk: "Low" },
+      layer_4_llm_placeholder: { overall_confidence: 95, additionality_score: 100, greenwashing_risk: "Low", net_issuable_carbon_tons: 125.4, mrv_compliance: "PASS", human_readable_summary: "Verification complete. DeepForest detected trees correlating with Satellite canopy." }
+    },
     tokenId: 101,
     mintedAt: '2026-04-10',
     createdAt: '2026-04-08',
@@ -96,9 +107,13 @@ const sampleProjects: Project[] = [
     schemeType: 'offset',
     status: 'verified',
     ipfsHash: 'QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX',
-    visionResult: { tree_count: 185, average_health_score: 87.1, survival_rate: 0.89 },
-    satelliteResult: { ndvi: 0.68, canopy_cover_percentage: 52.8, biomass_estimate_tons: 32.7, positive_change_from_last_year: '+8.1%', latest_imagery: '2026-03-20' },
-    llmResult: { additionality_score: 85, greenwashing_risk: 'Low', mrv_compliance: true, final_verification_status: 'Approved', ccts_eligible: true },
+    validationData: {
+      status: "REVIEW_REQUIRED",
+      layer_1_vision: { model_used: "deepforest", tree_count: 320, average_health_score: 75.0, survival_rate: 65.0 },
+      layer_2_satellite: { baseline_ndvi: 0.20, current_ndvi: 0.55, change_from_baseline: 175.0, canopy_cover_percentage: 57.7 },
+      layer_3_cross_validation: { mismatches_found: true, flags: ["WARNING: Vision tree count significantly exceeds claimed amount. Verify plot boundaries."], greenwashing_risk: "Medium" },
+      layer_4_llm_placeholder: { overall_confidence: 80, additionality_score: 87.5, greenwashing_risk: "Medium", net_issuable_carbon_tons: 65.2, mrv_compliance: "FAIL", human_readable_summary: "CRITICAL FLAGS DETECTED! Potential plot boundary discrepancy." }
+    },
     createdAt: '2026-03-15',
   },
   {
@@ -109,9 +124,13 @@ const sampleProjects: Project[] = [
     schemeType: 'compliance',
     status: 'minted',
     ipfsHash: 'QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB',
-    visionResult: { tree_count: 540, average_health_score: 96.8, survival_rate: 0.97 },
-    satelliteResult: { ndvi: 0.82, canopy_cover_percentage: 78.4, biomass_estimate_tons: 62.3, positive_change_from_last_year: '+18.2%', latest_imagery: '2026-04-12' },
-    llmResult: { additionality_score: 95, greenwashing_risk: 'Low', mrv_compliance: true, final_verification_status: 'Approved', ccts_eligible: true },
+    validationData: {
+      status: "APPROVED",
+      layer_1_vision: { model_used: "heuristic-pixel-density", tree_count: 1205, average_health_score: 98.0, survival_rate: 88.2 },
+      layer_2_satellite: { baseline_ndvi: 0.10, current_ndvi: 0.88, change_from_baseline: 780.0, canopy_cover_percentage: 92.4 },
+      layer_3_cross_validation: { mismatches_found: false, flags: [], greenwashing_risk: "Low" },
+      layer_4_llm_placeholder: { overall_confidence: 95, additionality_score: 100, greenwashing_risk: "Low", net_issuable_carbon_tons: 450.5, mrv_compliance: "PASS", human_readable_summary: "Verification complete. Dense biomass detected." }
+    },
     tokenId: 103,
     mintedAt: '2026-04-12',
     createdAt: '2026-04-05',

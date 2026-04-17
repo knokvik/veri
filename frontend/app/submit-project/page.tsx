@@ -1,32 +1,29 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAccount, useWriteContract } from 'wagmi';
 import { vericreditAbi } from '../../utils/abis';
 import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { useProjectStore, Project } from '../../lib/projectStore';
-import VerificationReport from '../../components/VerificationReport';
+import ValidationDashboard from '../../components/ValidationDashboard';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import {
   TreePine,
   MapPin,
-  Upload,
   Terminal,
   ChevronLeft,
   Hammer,
   FlaskConical,
   CloudUpload,
-  CheckCircle2,
   AlertCircle,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Compass
 } from "lucide-react"
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_VERICREDIT_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
@@ -36,7 +33,6 @@ export default function SubmitProject() {
   const { isConnected, address } = useAccount();
   const { writeContract, isPending } = useWriteContract();
   const { addProject, updateProject, addOwnedToken } = useProjectStore();
-  const router = useRouter();
 
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,8 +42,16 @@ export default function SubmitProject() {
   const [projectName, setProjectName] = useState('');
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
+  const [claimedTrees, setClaimedTrees] = useState('500');
+  const [landAreaHectares, setLandAreaHectares] = useState('5.2');
+  const [plantingDate, setPlantingDate] = useState('2026-01-15');
+  const [speciesCsv, setSpeciesCsv] = useState('Teak, Bamboo');
   const [schemeType, setSchemeType] = useState<'compliance' | 'offset'>('compliance');
   const [files, setFiles] = useState<File[]>([]);
+  const [landLeaseDocs, setLandLeaseDocs] = useState<File[]>([]);
+  const [plantingReportDocs, setPlantingReportDocs] = useState<File[]>([]);
+  const [permitDocs, setPermitDocs] = useState<File[]>([]);
+  const [supportingDocs, setSupportingDocs] = useState<File[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (authLoading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Verifying project permissions...</div>;
@@ -69,13 +73,55 @@ export default function SubmitProject() {
     setProjectName('Western Ghats Reforestation Alpha');
     setLat('15.345');
     setLng('73.891');
+    setClaimedTrees('500');
+    setLandAreaHectares('5.2');
+    setPlantingDate('2026-01-15');
+    setSpeciesCsv('Teak, Bamboo, Neem');
     setSchemeType('compliance');
+    
+    // Inject mock photos for testing
+    const mockFile1 = new File(["mock_image_data_1"], "sample_tree_canopy.jpg", { type: "image/jpeg" });
+    const mockFile2 = new File(["mock_image_data_2"], "sample_sapling.jpg", { type: "image/jpeg" });
+    setFiles([mockFile1, mockFile2]);
+    setLandLeaseDocs([]);
+    setPlantingReportDocs([]);
+    setPermitDocs([]);
+    setSupportingDocs([]);
+
     pushLog('Sample data injected: Ready for test pipeline.');
   };
 
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    
+    pushLog("Requesting device GPS coordinates...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLat(position.coords.latitude.toFixed(6));
+        setLng(position.coords.longitude.toFixed(6));
+        pushLog(`📍 Position Locked: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+      },
+      (error) => {
+        pushLog(`🚨 GPS Error: ${error.message}`);
+        alert(`Unable to retrieve location: ${error.message}`);
+      }
+    );
+  };
+
   const handleSimulateVerification = async () => {
-    if (!lat || !lng || !projectName) {
-      alert('Please enter project name and coordinates.');
+    if (!lat || !lng || !projectName || !claimedTrees || !landAreaHectares || !plantingDate) {
+      alert('Please complete all required claim fields before starting verification.');
+      return;
+    }
+    if (files.length === 0) {
+      alert('Please upload at least one real ground photo.');
+      return;
+    }
+    if (Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) {
+      alert('Latitude and longitude must be valid numbers.');
       return;
     }
     setLoading(true);
@@ -96,92 +142,66 @@ export default function SubmitProject() {
     setCurrentProject(newProject);
 
     try {
-      pushLog('Initiating secure verification pipeline...');
+      pushLog('Initiating unified 4-layer AI verification pipeline...');
+      pushLog(`Preparing ${files.length} uploaded photo(s) for multi-angle vision analysis...`);
 
-      // Step 1: Upload to IPFS / Storage
-      let finalIpfsHash = `QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG`;
-      if (files.length > 0) {
-        pushLog(`1. Uploading ${files.length} images to IPFS...`);
-        const formData = new FormData();
-        formData.append('file', files[0]); // Simple single file upload for now
-        const uploadRes = await fetch('http://localhost:8000/api/upload', {
-          method: 'POST',
-          body: formData
-        });
-        const uploadData = await uploadRes.json();
-        finalIpfsHash = uploadData.ipfs_hash;
-        pushLog(`   → Hash: ${finalIpfsHash}`);
-      } else {
-        pushLog('1. Processing coordinate-based metadata (Simulated Storage)...');
-        await new Promise(r => setTimeout(r, 800));
-      }
-      newProject.ipfsHash = finalIpfsHash;
+      const formData = new FormData();
+      const parsedSpecies = speciesCsv
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      formData.append('claims', JSON.stringify({
+        project_name: projectName,
+        tree_count: Number(claimedTrees),
+        species: parsedSpecies.length > 0 ? parsedSpecies : ["Unknown"],
+        planting_date: plantingDate,
+        land_area_hectares: Number(landAreaHectares),
+        estimated_carbon_tons: 25.0,
+        scheme_type: schemeType
+      }));
+      formData.append('location', JSON.stringify({ lat: parseFloat(lat), lng: parseFloat(lng) }));
+      formData.append('planting_date', plantingDate);
 
-      // Step 2: Call Real Backend for Vision
-      if (files.length > 0) {
-        pushLog('2. Executing DeepForest Tree Detection on uploaded assets...');
-        const formData = new FormData();
-        formData.append('file', files[0]);
-        formData.append('project_id', projectId);
-        const visionRes = await fetch('http://localhost:8000/api/verify/vision-upload', {
-          method: 'POST',
-          body: formData
-        });
-        const visionData = await visionRes.json();
-        newProject.visionResult = visionData.vision_results;
-        pushLog(`   → DeepForest: Detected ${visionData.vision_results.tree_count} trees with ${Math.round(visionData.vision_results.confidence_score * 100)}% confidence.`);
-      } else {
-        pushLog('2. Requesting DeepForest Vision Analysis (Coordinates Mode)...');
-        const visionRes = await fetch('http://localhost:8000/api/verify/vision', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project_id: projectId, lat: parseFloat(lat), lng: parseFloat(lng) })
-        });
-        const visionData = await visionRes.json();
-        newProject.visionResult = visionData.vision_results;
-        pushLog(`   → Detection: Found ${visionData.vision_results.tree_count} trees.`);
-      }
+      pushLog(`Attaching ${files.length} ground photos for Layer 1 Vision...`);
+      files.forEach((file) => formData.append('ground_photos', file));
+      landLeaseDocs.forEach((file) => formData.append('land_lease_docs', file));
+      plantingReportDocs.forEach((file) => formData.append('planting_report_docs', file));
+      permitDocs.forEach((file) => formData.append('government_permit_docs', file));
+      supportingDocs.forEach((file) => formData.append('supporting_docs', file));
+      pushLog(`Attached ${landLeaseDocs.length + plantingReportDocs.length + permitDocs.length + supportingDocs.length} legal/supporting document(s).`);
 
-      // Step 3: Call Real Backend for Satellite
-      pushLog('3. Fetching Sentinel-2 Satellite Multi-Spectral Data...');
-      const satRes = await fetch('http://localhost:8000/api/verify/satellite', {
+      pushLog('Dispatching payload to /validate (DeepForest + GEE + Gemini)...');
+      const res = await fetch('http://localhost:8000/api/validate/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: projectId, lat: parseFloat(lat), lng: parseFloat(lng) })
+        body: formData
       });
-      const satData = await satRes.json();
-      newProject.satelliteResult = satData.satellite_results;
-
-      if (satData.satellite_results.error) {
-        pushLog(`   ! Satellite: ${satData.satellite_results.error}`);
-        // Inject realistic default if GEE fails in test environment
-        newProject.satelliteResult = {
-          ndvi: 0.642,
-          canopy_cover_percentage: 78.4,
-          biomass_estimate_tons: 142.5,
-          positive_change_from_last_year: "+8.2%",
-        };
-      } else {
-        pushLog(`   → GEE: NDVI ${satData.satellite_results.ndvi} | Biomass ${satData.satellite_results.biomass_estimate_tons}T`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.detail || `Backend validation failed (${res.status})`);
       }
 
-      // Step 4: Call Real Backend for AI Decision
-      pushLog('4. Synthesizing Final AI Audit Decision...');
-      const llmRes = await fetch('http://localhost:8000/api/verify/llm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: projectId, lat: parseFloat(lat), lng: parseFloat(lng), scheme_type: schemeType })
-      });
-      const llmData = await llmRes.json();
-      newProject.llmResult = llmData.llm_results;
-      pushLog('   → AI Auditor: CCTS Compliance Verified.');
-
-      // Update project in store
-      newProject.status = 'verified';
+      const valData = await res.json();
+      
+      // Detailed logging for each of the 4 layers
+      pushLog(`Layer 1 (Vision): Detected ${valData.layer_1_vision?.tree_count || 0} trees via ${valData.layer_1_vision?.model_used || 'unknown'}; valid photos ${valData.layer_1_vision?.valid_photo_count ?? 'n/a'}.`);
+      pushLog(`Layer 2 (Satellite): NDVI Change +${valData.layer_2_satellite?.change_from_baseline}% (${valData.layer_2_satellite?.is_live_observation ? 'live' : 'fallback'}).`);
+      pushLog(`Layer 3 (Cross-Validation): Flags: ${valData.layer_3_cross_validation?.flags?.length || 0}`);
+      pushLog(`Layer 4 (LLM Placeholder): Conf Score: ${valData.layer_4_llm_placeholder?.overall_confidence}%`);
+      pushLog(`Documents: ${valData.document_packet?.total_document_count || 0} uploaded (${valData.document_packet?.status || 'unknown'} packet).`);
+      
+      if (valData.status === 'REVIEW_REQUIRED') {
+        pushLog(`🚨 REVIEW REQUIRED: Discrepancies found in cross-validation.`);
+      }
+      
+      newProject.validationData = valData;
+      newProject.status = valData.status === 'APPROVED' ? 'verified' : 'pending';
       updateProject(projectId, newProject);
       setCurrentProject({ ...newProject });
 
-      pushLog('✅ Integrity Pipeline Complete. Generating verification report...');
+      // For blockchain metadata IPFS emulation
+      newProject.ipfsHash = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG'; 
+
+      pushLog('✅ Integrity Pipeline Complete. Generating verification dashboard...');
       setStep('report');
 
     } catch (e) {
@@ -192,10 +212,12 @@ export default function SubmitProject() {
   };
 
   const handleMintCredit = () => {
-    if (!address || !currentProject?.llmResult) return;
+    if (!address || !currentProject?.validationData) return;
 
-    const mintAmount = 100;
+    const metadata = currentProject.validationData.layer_4_llm_placeholder;
+    const mintAmount = metadata?.net_issuable_carbon_tons ? Math.floor(metadata.net_issuable_carbon_tons) : 100;
     const nextTokenId = 100 + Date.now() % 1000;
+    const additionality = metadata?.additionality_score ? Math.floor(metadata.additionality_score) : 94;
 
     writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
@@ -205,9 +227,9 @@ export default function SubmitProject() {
         address,
         mintAmount,
         currentProject.schemeType === 'compliance' ? 'Compliance' : 'Offset',
-        currentProject.llmResult.additionality_score,
+        additionality,
         true,
-        `ipfs://${currentProject.ipfsHash}`,
+        `ipfs://${currentProject.ipfsHash || 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG'}`,
       ],
     }, {
       onSuccess: () => {
@@ -289,7 +311,58 @@ export default function SubmitProject() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="claimedTrees" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Claimed Trees</Label>
+                  <Input
+                    id="claimedTrees"
+                    type="number"
+                    min={1}
+                    value={claimedTrees}
+                    onChange={e => setClaimedTrees(e.target.value)}
+                    placeholder="e.g. 500"
+                    className="h-11 border-border focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="landAreaHectares" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Land Area (hectares)</Label>
+                  <Input
+                    id="landAreaHectares"
+                    type="number"
+                    min={0.01}
+                    step="0.01"
+                    value={landAreaHectares}
+                    onChange={e => setLandAreaHectares(e.target.value)}
+                    placeholder="e.g. 5.2"
+                    className="h-11 border-border focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="plantingDate" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Planting Date</Label>
+                  <Input
+                    id="plantingDate"
+                    type="date"
+                    value={plantingDate}
+                    onChange={e => setPlantingDate(e.target.value)}
+                    className="h-11 border-border focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="speciesCsv" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Species (comma separated)</Label>
+                  <Input
+                    id="speciesCsv"
+                    value={speciesCsv}
+                    onChange={e => setSpeciesCsv(e.target.value)}
+                    placeholder="e.g. Teak, Bamboo, Neem"
+                    className="h-11 border-border focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="lat" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Latitude</Label>
                   <div className="relative">
@@ -298,8 +371,8 @@ export default function SubmitProject() {
                       id="lat"
                       value={lat}
                       onChange={e => setLat(e.target.value)}
-                      placeholder="15.345"
-                      className="pl-10 h-11 border-border focus:border-primary/50"
+                      placeholder="Latitude"
+                      className="pl-10 h-11 border-border focus:border-primary/50 rounded-none"
                     />
                   </div>
                 </div>
@@ -311,12 +384,21 @@ export default function SubmitProject() {
                       id="lng"
                       value={lng}
                       onChange={e => setLng(e.target.value)}
-                      placeholder="73.891"
-                      className="pl-10 h-11 border-border focus:border-primary/50"
+                      placeholder="Longitude"
+                      className="pl-10 h-11 border-border focus:border-primary/50 rounded-none"
                     />
                   </div>
                 </div>
               </div>
+
+              <Button 
+                variant="outline" 
+                type="button" 
+                onClick={handleGetLocation}
+                className="w-full h-11 border-dashed border-primary/30 hover:border-primary/50 text-primary font-black uppercase tracking-widest text-[10px] gap-2 rounded-none"
+              >
+                <Compass className="w-3.5 h-3.5" /> Locate via Device GPS
+              </Button>
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Environmental Photos</Label>
@@ -335,6 +417,50 @@ export default function SubmitProject() {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Land/Farm Papers (Lease/Ownership)</Label>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={(e) => setLandLeaseDocs(Array.from(e.target.files || []))}
+                  className="h-11 border-dashed bg-muted/40"
+                />
+                <p className="text-[10px] text-muted-foreground ml-1">{landLeaseDocs.length} file(s) attached</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Planting Report Documents</Label>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={(e) => setPlantingReportDocs(Array.from(e.target.files || []))}
+                  className="h-11 border-dashed bg-muted/40"
+                />
+                <p className="text-[10px] text-muted-foreground ml-1">{plantingReportDocs.length} file(s) attached</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Government Permits</Label>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={(e) => setPermitDocs(Array.from(e.target.files || []))}
+                  className="h-11 border-dashed bg-muted/40"
+                />
+                <p className="text-[10px] text-muted-foreground ml-1">{permitDocs.length} file(s) attached</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Other Supporting Documents</Label>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={(e) => setSupportingDocs(Array.from(e.target.files || []))}
+                  className="h-11 border-dashed bg-muted/40"
+                />
+                <p className="text-[10px] text-muted-foreground ml-1">{supportingDocs.length} file(s) attached</p>
               </div>
 
               <div className="space-y-2">
@@ -410,35 +536,28 @@ export default function SubmitProject() {
               <ChevronLeft className="w-5 h-5" /> Back to Parameters
             </Button>
 
-            {currentProject.llmResult && (
+            {currentProject.validationData && (
               <div className="flex items-center gap-4 w-full md:w-auto">
                 <div className="hidden lg:flex flex-col items-end">
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Audit Ready</span>
                   <span className="text-xs font-bold text-green-500">Integrity Score Locked</span>
                 </div>
                 <Button
-                  onClick={handleMintCredit}
-                  disabled={!isConnected || isPending}
-                  className={`flex-grow md:flex-initial h-12 px-8 font-black tracking-tight text-base transition-all shadow-xl ${!isConnected ? 'bg-muted' : 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:shadow-lg'}`}
+                  onClick={() => {
+                     updateProject(currentProject.id, { status: 'pending_admin' });
+                     pushLog('✅ Project submitted for Admin Review. An admin will verify the payload.');
+                     setStep('form'); // or just show success
+                     alert('Submitted to Admin! You can check the Admin dashboard.');
+                  }}
+                  className={`flex-grow md:flex-initial h-12 px-8 font-black tracking-tight text-base transition-all shadow-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:shadow-lg text-white`}
                 >
-                  {isPending ? 'Propagating Transaction...' : !isConnected ? 'Connect Identity to Mint' : 'Mint Integrity Credit'}
-                  {!isPending && isConnected && <ArrowRight className="ml-2 w-4 h-4" />}
+                  Submit for Admin Review <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </div>
             )}
           </div>
 
-          <VerificationReport
-            projectName={currentProject.name}
-            lat={currentProject.lat}
-            lng={currentProject.lng}
-            schemeType={currentProject.schemeType}
-            ipfsHash={currentProject.ipfsHash}
-            visionResult={currentProject.visionResult}
-            satelliteResult={currentProject.satelliteResult}
-            llmResult={currentProject.llmResult}
-            createdAt={currentProject.createdAt}
-          />
+          <ValidationDashboard data={currentProject.validationData} />
 
           {logs.filter(l => l.includes('Mint') || l.includes('Transaction') || l.includes('Demo')).length > 0 && (
             <Card className="bg-muted/30 border-border">
