@@ -30,6 +30,8 @@ export default function MyProjects() {
     switch (status) {
       case 'minted': return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">MINTED</Badge>;
       case 'verified': return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">VERIFIED</Badge>;
+      case 'pending_admin': return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">PENDING ADMIN</Badge>;
+      case 'rejected': return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">REJECTED</Badge>;
       case 'retired': return <Badge variant="outline" className="text-muted-foreground">RETIRED</Badge>;
       case 'listed': return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">LISTED</Badge>;
       default: return <Badge variant="secondary">{status.toUpperCase()}</Badge>;
@@ -94,19 +96,19 @@ export default function MyProjects() {
 
               <CardContent>
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {p.visionResult && (
+                  {p.validationData?.layer_1_vision && (
                     <Badge variant="secondary" className="font-mono text-[10px] gap-1.5 bg-muted/60 border-border">
-                      <TreePine className="w-3 h-3" /> Trees: {p.visionResult.tree_count}
+                      <TreePine className="w-3 h-3" /> Trees: {p.validationData.layer_1_vision.tree_count}
                     </Badge>
                   )}
-                   {p.visionResult && (
+                   {p.validationData?.layer_1_vision && (
                     <Badge variant="secondary" className="font-mono text-[10px] gap-1.5 bg-muted/60 border-border">
-                      <Activity className="w-3 h-3" /> Health: {p.visionResult.average_health_score}%
+                      <Activity className="w-3 h-3" /> Health: {p.validationData.layer_1_vision.average_health_score}%
                     </Badge>
                   )}
-                  {p.llmResult && (
+                  {p.validationData?.layer_4_llm_placeholder && (
                     <Badge className="font-mono text-[10px] gap-1.5 bg-blue-500/10 text-blue-500 border-blue-500/10 hover:bg-blue-500/20">
-                      <Activity className="w-3 h-3" /> Additionality: {p.llmResult.additionality_score}
+                      <Activity className="w-3 h-3" /> Additionality: {p.validationData.layer_4_llm_placeholder.additionality_score}
                     </Badge>
                   )}
                 </div>

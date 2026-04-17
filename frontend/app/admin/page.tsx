@@ -3,10 +3,14 @@
 import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { useProjectStore } from '../../lib/projectStore';
 import Link from 'next/link';
+import { useAccount, useWriteContract } from 'wagmi';
+import { vericreditAbi } from '../../utils/abis';
+import { useState } from 'react';
 import CCTSBadge from '../../components/CCTSBadge';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { 
   Table, 
   TableBody, 
@@ -26,12 +30,152 @@ import {
   Eye,
   FileText,
   BarChart3,
-  Search
+  Search,
+  Check,
+  X
 } from "lucide-react"
+
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_VERICREDIT_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
 
 export default function AdminPanel() {
   const { isAuthorized, loading, accessDenied } = useProtectedRoute({ requiredRole: 'admin' });
-  const { projects, ownedTokens } = useProjectStore();
+  const { projects, ownedTokens, updateProject, addOwnedToken } = useProjectStore();
+  const { isConnected, address } = useAccount();
+  const { writeContract, isPending } = useWriteContract();
+  const [mintingId, setMintingId] = useState<string | null>(null);
+  const [adminOverrides, setAdminOverrides] = useState<Record<string, { credits: string; additionality: string; notes: string }>>({});
+
+  const defaultCredits = (project: any) => {
+    const metadata = project.validationData?.layer_4_llm_placeholder;
+    return Math.max(1, Math.floor(metadata?.net_issuable_carbon_tons || 100));
+  };
+
+  const defaultAdditionality = (project: any) => {
+    const metadata = project.validationData?.layer_4_llm_placeholder;
+    return Math.max(1, Math.floor(metadata?.additionality_score || 94));
+  };
+
+  const getOverride = (project: any) => {
+    return adminOverrides[project.id] || {
+      credits: String(defaultCredits(project)),
+      additionality: String(defaultAdditionality(project)),
+      notes: '',
+    };
+  };
+
+  const setOverrideField = (projectId: string, field: 'credits' | 'additionality' | 'notes', value: string, project?: any) => {
+    setAdminOverrides(prev => {
+      const current = prev[projectId] || {
+        credits: String(project ? defaultCredits(project) : 100),
+        additionality: String(project ? defaultAdditionality(project) : 94),
+        notes: '',
+      };
+      return {
+        ...prev,
+        [projectId]: {
+          ...current,
+          [field]: value,
+        },
+      };
+    });
+  };
+
+  const handleMintCredit = (project: any) => {
+    if (!address) {
+       alert("Please connect Admin wallet to mint");
+       return;
+    }
+    setMintingId(project.id);
+
+    const override = getOverride(project);
+    const mintAmount = Number(override.credits);
+    const additionality = Number(override.additionality);
+    if (!Number.isFinite(mintAmount) || mintAmount <= 0) {
+      alert("Please enter a valid mint credit amount.");
+      setMintingId(null);
+      return;
+    }
+    if (!Number.isFinite(additionality) || additionality < 0 || additionality > 100) {
+      alert("Additionality must be between 0 and 100.");
+      setMintingId(null);
+      return;
+    }
+
+    const nextTokenId = 100 + Date.now() % 1000;
+
+    writeContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi: vericreditAbi,
+      functionName: 'mintCredit',
+      args: [
+        project.owner || address, // Mint to the project owner
+        mintAmount,
+        project.schemeType === 'compliance' ? 'Compliance' : 'Offset',
+        additionality,
+        true,
+        `ipfs://${project.ipfsHash || 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG'}`,
+      ],
+    }, {
+      onSuccess: () => {
+        alert(`Transaction submitted! Minted ${mintAmount} credits to ${project.owner}`);
+        updateProject(project.id, {
+          status: 'minted',
+          tokenId: nextTokenId,
+          mintedAt: new Date().toISOString().split('T')[0],
+          adminDecision: {
+            approvedCredits: mintAmount,
+            approvedAdditionality: additionality,
+            adminNotes: override.notes || 'Approved and minted by admin.',
+            decidedAt: new Date().toISOString(),
+          },
+        });
+        addOwnedToken({
+          tokenId: nextTokenId,
+          projectName: project.name,
+          schemeType: project.schemeType,
+          amount: mintAmount,
+          mintedAt: new Date().toISOString().split('T')[0],
+          retired: false,
+        });
+        setMintingId(null);
+      },
+      onError: (err) => {
+        alert('Transaction failed: ' + err.message);
+        // Still update locally for demo purposes
+        updateProject(project.id, {
+          status: 'minted',
+          tokenId: nextTokenId,
+          mintedAt: new Date().toISOString().split('T')[0],
+          adminDecision: {
+            approvedCredits: mintAmount,
+            approvedAdditionality: additionality,
+            adminNotes: override.notes || 'Approved in demo mode after transaction error.',
+            decidedAt: new Date().toISOString(),
+          },
+        });
+        addOwnedToken({
+          tokenId: nextTokenId,
+          projectName: project.name,
+          schemeType: project.schemeType,
+          amount: mintAmount,
+          mintedAt: new Date().toISOString().split('T')[0],
+          retired: false,
+        });
+        setMintingId(null);
+      },
+    });
+  };
+
+  const handleReject = (id: string) => {
+     const override = adminOverrides[id];
+     updateProject(id, {
+       status: 'rejected',
+       adminDecision: {
+         adminNotes: override?.notes || 'Rejected by admin after review.',
+         decidedAt: new Date().toISOString(),
+       },
+     });
+  };
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground animate-pulse font-medium">Verifying authority credentials...</div>;
   if (accessDenied) {
@@ -56,7 +200,7 @@ export default function AdminPanel() {
 
   const totalProjects = projects.length;
   const verifiedCount = projects.filter(p => ['verified', 'minted', 'listed'].includes(p.status)).length;
-  const pendingCount = projects.filter(p => p.status === 'pending').length;
+  const pendingCount = projects.filter(p => p.status === 'pending' || p.status === 'pending_admin').length;
   const mintedCount = projects.filter(p => p.status === 'minted').length;
   const retiredCount = projects.filter(p => p.status === 'retired').length;
   const totalTokens = ownedTokens.reduce((sum, t) => sum + t.amount, 0);
@@ -145,9 +289,11 @@ export default function AdminPanel() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Badge variant={p.status === 'minted' ? 'default' : 'secondary'} className={`text-[9px] font-black h-5 px-1.5 py-0 border-none ${
-                             p.status === 'minted' ? 'bg-green-500 text-white' :
+                              p.status === 'minted' ? 'bg-green-500 text-white' :
                              p.status === 'verified' ? 'bg-blue-500 text-white' :
-                             p.status === 'pending' ? 'bg-amber-500 text-black' :
+                             p.status === 'pending_admin' ? 'bg-amber-500 text-black' :
+                             p.status === 'pending' ? 'bg-yellow-500 text-black' :
+                             p.status === 'rejected' ? 'bg-red-500 text-white' :
                              'bg-muted text-muted-foreground'
                           }`}>
                             {p.status.toUpperCase()}
@@ -156,11 +302,47 @@ export default function AdminPanel() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary hover:text-white transition-colors">
-                           <Link href={`/verification-report?id=${p.id}`}>
-                             <Eye className="w-3.5 h-3.5" />
-                           </Link>
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {p.status === 'pending_admin' && (
+                             <div className="flex items-center gap-2">
+                               <Input
+                                 type="number"
+                                 min={1}
+                                 value={getOverride(p).credits}
+                                 onChange={(e) => setOverrideField(p.id, 'credits', e.target.value, p)}
+                                 className="h-8 w-20 text-[10px]"
+                                 placeholder="Credits"
+                               />
+                               <Input
+                                 type="number"
+                                 min={0}
+                                 max={100}
+                                 value={getOverride(p).additionality}
+                                 onChange={(e) => setOverrideField(p.id, 'additionality', e.target.value, p)}
+                                 className="h-8 w-16 text-[10px]"
+                                 placeholder="Addl."
+                               />
+                               <Input
+                                 type="text"
+                                 value={getOverride(p).notes}
+                                 onChange={(e) => setOverrideField(p.id, 'notes', e.target.value, p)}
+                                 className="h-8 w-44 text-[10px]"
+                                 placeholder="Admin notes"
+                               />
+                               <Button onClick={() => handleMintCredit(p)} disabled={isPending && mintingId === p.id} size="sm" className="h-8 bg-green-600 hover:bg-green-700 font-bold px-2">
+                                 {isPending && mintingId === p.id ? '...' : <Check className="w-3.5 h-3.5" />}
+                               </Button>
+                               <Button onClick={() => handleReject(p.id)} variant="destructive" size="sm" className="h-8 px-2">
+                                 <X className="w-3.5 h-3.5" />
+                               </Button>
+                             </div>
+                           )}
+                           <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary hover:text-white transition-colors">
+                              <Link href={`/verification-report?id=${p.id}`}>
+                                <Eye className="w-3.5 h-3.5" />
+                              </Link>
+                           </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -61,7 +61,7 @@ export default function Marketplace() {
       name: p.name,
       schemeType: p.schemeType,
       price: p.schemeType === 'compliance' ? 12.5 : 8.2,
-      score: p.llmResult?.additionality_score || 0,
+      score: p.validationData?.layer_4_llm_placeholder?.additionality_score || 0,
       mintedAt: p.mintedAt || p.createdAt,
       tokenId: p.tokenId!,
       retired: p.status === 'retired',

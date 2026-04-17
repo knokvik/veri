@@ -147,6 +147,8 @@ export default function Dashboard() {
                       <Badge className={`text-[10px] font-black ${
                         p.status === 'minted' ? 'bg-green-500 text-white' :
                         p.status === 'verified' ? 'bg-blue-500 text-white' :
+                        p.status === 'pending_admin' ? 'bg-amber-500 text-black' :
+                        p.status === 'rejected' ? 'bg-red-500 text-white' :
                         'bg-amber-500 text-black'
                       }`}>
                         {p.status.toUpperCase()}
